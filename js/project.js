@@ -59,7 +59,7 @@ function reload_data( done_event ){
 		
 		// make_new_field_my_shoots();
 	}
-	else if{ 'alle_versenkt' ){
+	else if( 'alle_versenkt' ){
 		//Nach einem Schuss, wenn alle Schiffe eines Users versenkt
 		
 		// user_won();
@@ -379,6 +379,15 @@ function Schiffe( username ) {
 
 	//Schiffe zufällig platzieren
 	this.place_random = function() { 
+		
+		//hier drin wird der Inhalt von this.current neu gebildet!
+		//	immer von Standard ausgehen
+		var this_current_new = this.all;
+		
+		//Feldgröße
+		var feld = new Feld();
+		var max_x = feld.max_x;
+		var max_y = feld.max_y;
 	
 		//alle Schiffsklassen für Feld durchgehen
 		$.each( this.all , function ( key, val ) {
@@ -388,16 +397,16 @@ function Schiffe( username ) {
 			var anzahl = val['anzahl'];
 			
 			//erstmal keine Schiffe
-			this.current[key]["place"] = new Array();
+			this_current_new[key]["place"] = new Array();
 			
 			//Alle Schiffe haben keine Treffer, Array der Treffer vorbereiten
-			var keine_treffer = new Array();
+			var keine_treffer = new Array( );
 			for (var ii = 0; ii < size; ii++) {
-				keine_treffer.concat( [0] );
+				keine_treffer.push( 0 );
 			}
 			
 			//zum Erstellen der Schiffe
-			var new_obj, new_arr;
+			var new_obj, new_arr = [];
 			
 			//entsprechend der Anzahl des Schiffes eines platzieren.
 			for (var i = 0; i < anzahl; i++) {
@@ -422,14 +431,17 @@ function Schiffe( username ) {
 				/*****************************************/
 				//ToDo
 				/*****************************************/
-			
-				//Objekt dieses Schiffe als Array
-				new_arr[0] = new_obj;
 				
-				//Array dieses Schiffes mit den anderen zusammenfügen
-				this.current[key]["place"].concat(new_arr);
+				new_obj['x'] = randomint( 0, max_x );
+				new_obj['y'] = randomint( 0, max_y );
+			
+			
+				//Objekt dieses Schiffes mit den anderen zusammenfügen
+				this_current_new[key]["place"].push( new_obj );
 			}
 		});  
+	
+		this.current = this_current_new;
 	
 		return true;   
 	}
@@ -495,7 +507,7 @@ function Schiffe( username ) {
 		});
 
 		//this.shoots anpassen
-		this.shoots.concat([ "x":x, "y":y, "art": retval ]);
+		this.shoots.concat([ { "x": x, "y": y, "art": retval } ]);
 		
 		//Systemeigenes Eventhandling
 		//	Schuss durchgeführt
@@ -540,22 +552,27 @@ function start_game(){
 
 }
 
+var schiffe, feld;
+
 //Tests während der Entwicklung
 function testing() {
-	var schiffe = new Schiffe( 'Tester' );
-	var feld = new Feld();
+	schiffe = new Schiffe( 'Tester' );
+	feld = new Feld();
 
 	var html = feld.empty_field( 'my_ships' );
 	html += feld.empty_field( 'shoot_at' );
 	html += '<br /><span class="untertitel">Meine Schiffe</span><span class="untertitel">Schussfeld</span><br />';
 	show_html( html, "div.area_one" );
 	
-	var twoover = [{ "x":2, "y":4, "art":1}, { "x":4, "y":6, "art":0}, { "x":9, "y":9, "art":2}];
-	//schiffe.place_random();
-	//var oneover = schiffe.current;
+	var twoover = schiffe.shoots;
+		
+	//var twoover = [{ "x":2, "y":4, "art":1}, { "x":4, "y":6, "art":0}, { "x":9, "y":9, "art":2}];
 	
-	oneover['u']['place'] = [{ 'y':2, 'x':2, 'd':'h', 't':[0,0] },{ 'y':8, 'x':8, 'd':'h', 't':[1,1] }];
-	oneover['k']['place'] = [{ 'y':4, 'x':2, 'd':'v', 't':[0,0,0,0] }, { 'y':0, 'x':9, 'd':'v', 't':[1,1,1,1] }];
+	schiffe.place_random();
+	var oneover = schiffe.current;
+	
+	//oneover['u']['place'] = [{ 'y':2, 'x':2, 'd':'h', 't':[0,0] },{ 'y':8, 'x':8, 'd':'h', 't':[1,1] }];
+	//oneover['k']['place'] = [{ 'y':4, 'x':2, 'd':'v', 't':[0,0,0,0] }, { 'y':0, 'x':9, 'd':'v', 't':[1,1,1,1] }];
 
 	feld.show_field_shoots( twoover, 'shoot_at' );
 	feld.show_field_ships( oneover, 'my_ships' );
