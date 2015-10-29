@@ -56,6 +56,10 @@ function reload_data( done_event ){
 	if( done_event == 'shoot' ){
 		//Nach einem Schuss wird das alles ausgeführt:
 		
+		
+		feld.show_field_shoots( schiffe.shoots , 'shoot_at' );
+		feld.show_field_ships( schiffe.current , 'my_ships' );
+		
 		// make_new_field_my_shoots();
 	}
 	else if( done_event == 'alle_versenkt' ){
@@ -181,7 +185,7 @@ function Feld(){
 			}
 		
 			//HTML in Kästchen einfügen
-			$( '.'+fieldclass+' div.y_'+ val['y'] +'x_'+ val['y'] ).html( '<span class="shoot '+css_class+'">&nbsp;</span>' );
+			$( '.'+fieldclass+' div.y_'+ val['y'] +'x_'+ val['x'] ).html( '<span class="shoot '+css_class+'">&nbsp;</span>' );
 		});
 
 		return true;
@@ -532,7 +536,12 @@ function Schiffe( username ) {
 	this.shoot_ships = function( x, y ){
 
 		//Int für Rückgabe
-		var retval, number_of_ships = 0;
+		//	bisher im Wasser gelandet
+		//	keine Schiffe vorhanden
+		var retval = 0, number_of_ships = 0;
+		
+		//this für Funktion unten
+		var this_func = this;
 	
 		//Alle Schiffsarten durchgehen
 		$.each( this.current, function( key, val ){
@@ -542,6 +551,10 @@ function Schiffe( username ) {
 			
 			//Jedes Schiff durchgehen
 			$.each( val["place"], function( k, v ){
+				
+				//Variablen für Prüfung ob getroffen
+				var sum, i;
+				
 				//horizontal prüfen
 				if( v["d"] == 'h' ){
 					//Y-Wert muss identisch sein
@@ -549,15 +562,16 @@ function Schiffe( username ) {
 						//alle Werte des Schiffes prüfen (x+0 bis x+size)
 						//	Array mit Treffern anpassen, versenkt?
 						
-						/*****************************************/
-						//ToDo
-						/*****************************************/
-					}
-					//Y-Wert passt nicht und Schiff horizontal
-					//	-> kein Treffer möglich
-					else{
-						retval = 0;
-						return;
+						for( i = 0; i < size; i++ ){
+							
+							sum = v["x"] + i;
+							sum = sum.toString();
+							
+							if( sum == x ){
+								retval = 1;
+								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships, 1 );
+							}
+						}
 					}
 				}
 				//vertikal prüfen
@@ -567,16 +581,16 @@ function Schiffe( username ) {
 						//alle Werte des Schiffes prüfen (y+0 bis y+size)
 						//	Array mit Treffern anpassen, versenkt?
 						
-						/*****************************************/
-						//ToDo
-						/*****************************************/
-						
-					}
-					//X-Wert passt nicht und Schiff horizontal
-					//	-> kein Treffer möglich
-					else{
-						retval = 0;
-						return;
+						for( i = 0; i < size; i++ ){
+							
+							sum = v["y"] + i;
+							sum = sum.toString();
+							
+							if( sum == y ){
+								retval = 1;
+								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships, 2 );
+							}
+						}
 					}
 				}
 				
@@ -585,8 +599,19 @@ function Schiffe( username ) {
 			});
 		});
 
+		if( retval == 0 ){
+			//keine Schiffe getroffen
+			this.setretval_for_shoot_ships( 0, x, y, number_of_ships, 3 );
+			return 0;
+		}
+	}
+
+	this.setretval_for_shoot_ships = function( retval, x , y, number_of_ships, pl ){
 		//this.shoots anpassen
-		this.shoots.concat([ { "x": x, "y": y, "art": retval } ]);
+		this.shoots.push( { "x": x, "y": y, "art": retval } );
+		
+		console.log( this );
+		console.log( [retval, x , y, number_of_ships, pl]);
 		
 		//Systemeigenes Eventhandling
 		//	Schuss durchgeführt
@@ -594,7 +619,7 @@ function Schiffe( username ) {
 		//	Schiff versenkt -> evtl. ein User gewonnen
 		if( retval == 2 ){
 			reload_data( 'versenkt' );
-			if( number_of_ships == 1 ){
+			if( number_of_ships == 0 ){
 				reload_data( 'alle_versenkt' );
 			}
 		}
