@@ -1,0 +1,204 @@
+/* Allgemein */
+body{
+	/* Hintergrundfarbe */
+	background-color: gray;
+	/* Schriftfarbe */
+	color:black;
+	/* Schriftgröße */
+	font-size: 100%;
+	/* Schriftart */
+	font-family: Ubuntu;
+}
+
+/* Überschriften */
+h1{
+	font-size: 1.5em;
+	/* Unterstrich */
+	border-bottom: 2px solid #5d7;
+}
+
+/* Textfeld für jQuery-UI Dialog */
+div#dialog{
+	/* ausblenden */
+	display:none;
+}
+
+/* Seitenbereich */
+div.page{
+	/* Zentrierung */
+	margin:auto;
+	/* Rand 4px und grün */
+	border: 4px solid #5d7;
+	/* Breite des Seitenbereichs */
+	width: 750px;
+	/* Schatten für Seitenbereich, unten oben Ecke Farbe */
+	box-shadow: 6px 6px 4px black;
+	/* Hintergrundfarbe */
+	background-color: white;
+	/* Runde Ecken */
+	border-radius: 15px;
+	/* Innenabstand */
+	padding:10px;
+}
+
+/* Nachrichtenbox */
+div.outputs{
+	border:1px solid black;
+	border-radius:4px;
+	padding:5px;
+	background-color:gray;
+	/* Außenanstand */
+	margin: 10px;
+	/* Mindesthöhe */
+	min-height: 30px;
+	color:white;
+}
+
+/* Berich um mit JavaScript Inhalt anzuzeigen */
+div.area_one{
+	/* Rand unten 2px grün */
+	border-bottom:2px solid #5d7;
+	/* Außenabstand unten */
+	margin-bottom:10px;
+}
+
+/* Spielfeld */
+.splf{
+	border:2px solid black;
+	margin:10px;
+	width: 350px;
+	/* Text zentrieren */
+	text-align: center;
+	/* als Kasten in einer Zeile anzeigen */
+	display: inline-block;
+}
+
+/* y-Achse Kästen */
+.y {
+	/* Höhe */
+	height: 20px;
+	border-bottom: 1px solid black;
+	/* nach jedem Kasten wird automatisch die Zeile umgebrochen */
+}
+
+/* letzter Kasten y-Achse */
+.y_11{
+	/* keinen Rand (von .y) */
+	border: 0;	
+}
+
+/* x-Achse Kästen (in Kästen der y-Achse) */
+.x {
+	width: 30.82px;
+	display: inline-block;
+	border-right: 1px solid black;
+}
+
+/* Anzeige von durchgeführten Schüssen (Kreise) */
+/*		(per JavaScript in Kästchen) */
+span.shoot{
+	width:30.82px;
+	height:20px;
+	display: inline-block;
+	border-radius: 10px;
+}
+/* Farbe für Schüsse ins Wasser */
+span.shoot_water{
+	background-color: blue;
+}
+/* Farbe für Schüsse auf ein Schiff */
+span.shoot_part{
+	background-color: orange;
+}
+/* Farbe für ein untergegangenes Schiff */
+span.shoot_all{
+	background-color: red;
+}
+
+/* Anzeige der Schiffe */
+/*		(per JavaScript in Kästchen) */
+span.ship{
+	display: inline-block;
+}
+
+/* alle horizontalen Schiffsteile */
+span.ship_bug_h, span.ship_all_h, span.ship_end_h{
+	/* Größe */
+	width:30.82px;
+	height:20px;
+}
+/* Bug von horizontalen Schiffen */
+/*		(soll spitz sein) */
+span.ship_bug_h{
+	/* Spitze hat 20px, Rest als Breite */
+	width:10.82px;
+	/* Spitze ist 20px hoch */
+	height:0;
+	
+	/* Spitze aus Rändern machen */
+	/* oben und unten schräger Rand in weiß (Farbe nicht anpassbar) */
+	border-top: 10px solid white !important;
+	border-bottom: 10px solid white !important;
+	/* Rechts schwarzer Rand auf 20px Höhe */
+	border-right: 20px solid black;
+	/* Den Rand oben im Kästchen beginnen lassen */
+	vertical-align: top;
+	/* Hintergrunf auf weiß, sonst evtl. schwarze/rote Reste */
+	background-color:white !important;
+}
+/* Heck des Schiffes */
+/*		(soll abgerundet sein) */
+span.ship_end_h{
+	/* oben und unten rechts die Ecken abrunden */
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+}
+
+/* alle vertikalen Schiffsteile */
+span.ship_bug_v, span.ship_all_v, span.ship_end_v{
+	/* nur 20px breit, nicht ganzes Kästchen */
+	width:20px;
+	height:20px;
+}
+/* vertikaler Bug */
+span.ship_bug_v{
+	/* Spitze füllt ganzes Kästchen aus */
+	width: 0;
+	height: 0;
+	/* Spitze nach oben, nicht nach links */
+	border-left: 10px solid white !important;
+	border-right: 10px solid white !important;
+	border-bottom: 20px solid black;
+	background-color:white !important;
+}
+/* Heck des Schiffes */
+span.ship_end_v{
+	border-bottom-right-radius: 10px;
+	border-bottom-left-radius: 10px;
+}
+
+/* Schiffsteile rot => getroffen */
+span.ship_red{
+	/* Hintergrund für Mitte und Heck färben */
+	background-color: red;
+	/* Ränder färben (nur die ohne !important) */
+	border-bottom-color: red;
+	border-right-color: red;
+}
+/* Schiffsteile schwarz => unversehrt */
+span.ship_black{
+	background-color: black;
+	border-bottom-color: black;
+	border-right-color: black;
+}
+
+/* Titel unter den Spielfeldern */
+span.untertitel{
+	text-align:center;
+	width:350px;
+	/* Außenabstand oben und unten null, rechts und links 10px */
+	margin: 0 10px;
+	display: inline-block;
+	/* fette Schrift */
+	font-weight: bold;
+}

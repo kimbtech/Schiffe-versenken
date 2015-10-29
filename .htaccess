@@ -1,0 +1,3 @@
+Options -Indexes
+
+Header add X-Robots-Tag "none"
