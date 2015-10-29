@@ -59,12 +59,12 @@ function reload_data( done_event ){
 		
 		// make_new_field_my_shoots();
 	}
-	else if( 'alle_versenkt' ){
+	else if( done_event == 'alle_versenkt' ){
 		//Nach einem Schuss, wenn alle Schiffe eines Users versenkt
 		
 		// user_won();
 	}
-	else if ( 'versenkt') {
+	else if ( done_event == 'versenkt' ) {
 		//Nach einem Schuss, wenn ein Schiff versenkt
 		
 		// ein_schiff_weniger
@@ -388,6 +388,10 @@ function Schiffe( username ) {
 		var feld = new Feld();
 		var max_x = feld.max_x;
 		var max_y = feld.max_y;
+		
+		//Besetzte Stellen merken (nicht doppelt zählen)
+		//	jeweils mit Inhalt als Sting "x-y"
+		var bes_place = [];
 	
 		//alle Schiffsklassen für Feld durchgehen
 		$.each( this.all , function ( key, val ) {
@@ -543,7 +547,7 @@ function start_game(){
 	//alles für neues Spiel abfragen und los
 	
 	//Willkommen
-	set_message( 'Herzlich Willkommen bei "Schiffe versenken" von KIMB-technologies' );
+	set_message( 'Herzlich Willkommen bei "Schiffe-versenken" von KIMB-technologies!' );
 	
 	
 	/*****************************************/
