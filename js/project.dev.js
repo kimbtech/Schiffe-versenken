@@ -2,9 +2,8 @@
 //	PHP/ Server Spiel ?
 var global_game = false;
 //	ID des Spiels für PHP
-var global_spielid = '<<set by PHP>>';
-//	Spieler ID
-var global_spielerid = 0;
+//		per Ajax holen
+var global_spielid = 000000;
 
 /******************************************************************************************/
 //Beginn allgemeine Funktionen
@@ -312,13 +311,9 @@ function Feld(){
 //	username => Name des Users
 function Schiffe( username ) {
 
-	//ID
-	global_spielerid++;
-	this.id = global_spielerid;
-
 	//Username
 	if( typeof username === "undefined" ){
-		username = 'Max Muster '+ this.id;
+		username = 'Max Muster';
 	}
 	this.username = username;  
 	
@@ -542,6 +537,9 @@ $(function() {
 	testing();
 });
 
+//Das Objekt für Schiffe und User global machen 
+var schiffe, feld;
+
 //Spiel beginnen
 function start_game(){
 	//alles für neues Spiel abfragen und los
@@ -549,6 +547,21 @@ function start_game(){
 	//Willkommen
 	set_message( 'Herzlich Willkommen bei "Schiffe-versenken" von KIMB-technologies!' );
 	
+	//Felder anzeigen
+	//	Feldobjekt
+	feld = new Feld();
+	//	Überschrift
+	var html = '<br /><span class="untertitel">Meine Schiffe</span><span class="untertitel">Schussfeld</span><br />';
+	//	Übersicht der Schiffe des Users
+	html += feld.empty_field( 'my_ships' );
+	//	Übesicht der Schüsse
+	html += feld.empty_field( 'shoot_at' );
+	//		alles ausgeben
+	show_html( html, "div.area_one" );
+	
+	//Usernamen und Spielart fragen
+	
+	//		.......
 	
 	/*****************************************/
 	//ToDo
@@ -556,17 +569,11 @@ function start_game(){
 
 }
 
-var schiffe, feld;
+
 
 //Tests während der Entwicklung
 function testing() {
 	schiffe = new Schiffe( 'Tester' );
-	feld = new Feld();
-
-	var html = feld.empty_field( 'my_ships' );
-	html += feld.empty_field( 'shoot_at' );
-	html += '<br /><span class="untertitel">Meine Schiffe</span><span class="untertitel">Schussfeld</span><br />';
-	show_html( html, "div.area_one" );
 	
 	var twoover = schiffe.shoots;
 		
