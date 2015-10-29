@@ -141,7 +141,7 @@ function Feld(){
 				//Kästchen erstellen
 				//	(einen nach links class="x", außdem Klasse mit Index von Y, X und zusammen)
 				//	beim Überfahren auch Zahlen zeigen
-				splf += '<div class="x y_'+i+' x_'+ii+' y_'+i+'x_'+ii+'" title="' + this.koordtoletter[i] + ' ' + i + ' | ' + ii + '">&nbsp;</div>';
+				splf += '<div class="x y_'+i+' x_'+ii+' y_'+i+'x_'+ii+'" title="' + ii + ' | ' + this.koordtoletter[i] + ' ' + i + '">&nbsp;</div>';
 			}
 			
 			//Reihe beenden
@@ -379,6 +379,9 @@ function Schiffe( username ) {
 		//	immer von Standard ausgehen
 		var this_current_new = this.all;
 		
+		//this für Funktion unten
+		var this_func = this;
+		
 		//Feldgröße
 		var feld = new Feld();
 		var max_x = feld.max_x;
@@ -407,6 +410,15 @@ function Schiffe( username ) {
 			//zum Erstellen der Schiffe
 			var new_obj, new_arr = [];
 			
+			//für maximale X-/ Y-Werte
+			var hier_max_y, hier_max_x;
+			
+			//entgültige X-/ Y-Werte
+			var end_x, end_y;
+			
+			//alle Stellen eines Schiffes
+			var allplaces;
+			
 			//entsprechend der Anzahl des Schiffes eines platzieren.
 			for (var i = 0; i < anzahl; i++) {
 				//leeres Array für Schiff
@@ -426,15 +438,58 @@ function Schiffe( username ) {
 				
 				//x und y Wert!!
 				//	Überlagerung prüfen (Array aller vergebenen Koordinaten)
+				//	
 				
-				/*****************************************/
-				//ToDo
-				/*****************************************/
+				//Maximale X-/ Y-Werte berechnen
+				if( new_obj['d'] == 'h' ){
+					//horizontal
+					//	nur X-Werte, bis Größe ab der Schiff über den Rand geht
+					hier_max_x = max_x - size;
+					//	alle Y-Werte
+					hier_max_y = max_y;
+				}
+				else{
+					//vertikal
+					//	alle X-Werte
+					hier_max_x = max_x;
+					//	nur Y-Werte, bis Größe ab der Schiff über den Rand geht
+					hier_max_y = max_y - size;
+				}
 				
-				new_obj['x'] = randomint( 0, max_x );
-				new_obj['y'] = randomint( 0, max_y );
+				//noch nicht besetzte Stelle finden
+				do{
+					//Stelle (Startpunkt) zufällig wählen
+					end_x = randomint( 0, hier_max_x );
+					end_y = randomint( 0, hier_max_y );
+					
+					//alle Stellen erstellen
+					allplaces = new Array;
+					//	Startpunkt
+					allplaces.push( end_x + '-' + end_y );
+					//	alle anderen Stellen
+					//		ii auf 1, da erste Stelle schon gesetzt
+					for( var ii = 0; ii < size; ii++){										
+						if( new_obj['d'] == 'h' ){
+							//horizontal, X-Werte erhöhen
+							allplaces.push( (end_x +ii ) + '-' + end_y );
+						}
+						else{
+							//vertikal, Y-Werte erhöhen
+							allplaces.push( end_x + '-' + ( end_y + ii ) );
+						}	
+					}
+					
+					//Schleife erst verlassen, wenn freie Stelle gefunden
+				} while ( this_func.all_places_free(allplaces, bes_place) );
 			
-			
+				//endgültige Werte setzen
+				new_obj['x'] = end_x;
+				new_obj['y'] = end_y;
+				
+				//endgültige Werte als besetzt speichern
+				//	Array von oben
+				bes_place = bes_place.concat( allplaces );
+		
 				//Objekt dieses Schiffes mit den anderen zusammenfügen
 				this_current_new[key]["place"].push( new_obj );
 			}
@@ -443,6 +498,31 @@ function Schiffe( username ) {
 		this.current = this_current_new;
 	
 		return true;   
+	}
+	
+	//Prüft ob in zwei Arrays die gleichen Inhalt aufzufinden sind.
+	//	allplaces => Array mit den Inhalten, nach denen gesucht werden soll
+	//	bes_places => Array in dem gesucht wird
+	//	Return => true(Fund)/ false(kein Fund)
+	this.all_places_free = function(allplaces, bes_place){
+	
+		//für Rückgabewert
+		var retval = false;
+	
+		//alle Stellen prüfen (allplaces durchgehen)	
+		$.each( allplaces, function( key, val ) {
+			
+			//aktueller Wert aus allplaces in bes_places?
+			//	-1 => not found		
+			if( $.inArray( val, bes_place ) != -1 ){
+				//wurde gefunden
+				retval = true;
+				return;
+			}
+		});
+		
+		//nicht gefunden
+		return retval;	
 	}
 
 	//Schuss auf Flotte
@@ -577,7 +657,7 @@ function testing() {
 	
 	var twoover = schiffe.shoots;
 		
-	//var twoover = [{ "x":2, "y":4, "art":1}, { "x":4, "y":6, "art":0}, { "x":9, "y":9, "art":2}];
+	//twoover = [{ "x":2, "y":4, "art":1}, { "x":4, "y":6, "art":0}, { "x":9, "y":9, "art":2}];
 	
 	schiffe.place_random();
 	var oneover = schiffe.current;
@@ -597,17 +677,18 @@ function testing() {
 
 //wenn Seite geladen
 $(function() {
-	
 	//ganze aktuelle Spalte und Reihe markieren
 	var HoverClassPraefix = 'div.shoot_at ';
 	var HoverColor = '#5d7';
 	var HoverColorlight = '#aeb';
 	$( HoverClassPraefix+'.x' ).hover(function(){
 		var classList = $( this ).attr('class').split(/\s+/);
-
-		$( HoverClassPraefix+'.'+classList[1] ).css( 'background-color', HoverColorlight );
-		$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', HoverColorlight );
-		$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', HoverColor );
+		
+		if( classList.length > 2 ){
+			$( HoverClassPraefix+'.'+classList[1] ).css( 'background-color', HoverColorlight );
+			$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', HoverColorlight );
+			$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', HoverColor );
+		}
 	}, function(){
 		var classList = $( this ).attr('class').split(/\s+/);
 
