@@ -3,7 +3,7 @@
 var global_game = false;
 //	ID des Spiels für PHP
 //		per Ajax holen
-var global_spielid = 000000;
+var global_spielid = 0;
 
 /******************************************************************************************/
 //Beginn allgemeine Funktionen
@@ -36,7 +36,8 @@ function new_dialog( cont, tit ){
 	$( "#dialog" ).attr( 'title', tit );
 	$( "#dialog" ).html( cont );
 	$( "#dialog" ).css( 'display', 'block' );
-	$( "#dialog" ).dialog();
+	$( "#dialog" ).dialog( { width:600 } );
+	$( "#dialog" ).dialog('option', 'title', tit );
 }
 
 //Dialog schließen
@@ -56,21 +57,44 @@ function reload_data( done_event ){
 	if( done_event == 'shoot' ){
 		//Nach einem Schuss wird das alles ausgeführt:
 		
-		
-		feld.show_field_shoots( schiffe.shoots , 'shoot_at' );
-		feld.show_field_ships( schiffe.current , 'my_ships' );
-		
-		// make_new_field_my_shoots();
+		if( global_game ){
+			//PHP-Spiel
+		}
+		else{
+			//nur wenn User geschossen hat, PC schießen lassen
+			//	sonst Endlosschleife
+			if( aktuser == schiffe_one.username ){
+				//PC-Spiel
+				pc_shoot_and_refresh();
+			}
+		}
+
 	}
 	else if( done_event == 'alle_versenkt' ){
 		//Nach einem Schuss, wenn alle Schiffe eines Users versenkt
 		
-		// user_won();
+		set_message( 'Das Spiel ist aus!' );
+		
+		if( aktuser == schiffe_one.username ){
+			 new_dialog( 'Du hast gewonnen!', 'Herzlichen Glückwunsch' );
+		}
+		else{
+			 new_dialog( 'Dein Gegner hat gewonnen!', 'Schade' );						
+		}
+		
+		show_html( '<div style="height:334px;"><br /><br /><br /><center><a href=""><button>Neues Spiel</button></center></a></div>', "div.area_one" );
+		show_html( '', "div.area_two" );
 	}
 	else if ( done_event == 'versenkt' ) {
 		//Nach einem Schuss, wenn ein Schiff versenkt
 		
-		// ein_schiff_weniger
+		if( aktuser == schiffe_one.username ){
+			set_message( 'Du hast ein Schiff versenkt!' );	
+		}
+		else{
+			set_message( 'Eines deiner Schiff wurde versenkt!' );	
+		}
+		
 	}
 
 	return true;
@@ -729,12 +753,10 @@ $(function() {
 	//Spiel beginnen wenn Seite geladen
 	
 	start_game();
-	
-	testing();
 });
 
 //Das Objekt für Schiffe und User global machen 
-var schiffe, feld;
+var schiffe_one, schiffe_two, feld;
 
 //Spiel beginnen
 function start_game(){
@@ -756,35 +778,162 @@ function start_game(){
 	show_html( html, "div.area_one" );
 	
 	//Usernamen und Spielart fragen
-	
-	//		.......
-	
-	/*****************************************/
-	//ToDo
-	/*****************************************/
+	//	Inhalt
+	var cont = ' Willkommen bei "Schiffe-versenken" von KIMB-technologies!<br />';
+	cont += 'Bitte wählen Sie einen Gegner:<br /><br />';
+	 cont += '<div id="radio"> <input type="radio" id="pc" name="pc"><label for="pc" >Computer</label><input type="radio" id="www" name="www" ><label for="www">Anderer Spieler</label></div>';
+	//	Dialog
+	 new_dialog( cont, 'Spielbeginn' );
+	 //	Buttons auf Dialog
+	 $( "#radio" ).buttonset();
+	 
+	 //Button Klicks auswerten
+	$( "#radio input[type=radio]" ).click( function() {
+		if( $( this ).attr( 'name' )  == 'pc' ){
+			game_contra_pc();
+		}
+		else{
+			game_contra_www();
+		}
+		
+	  });
 
 }
 
-
-
-//Tests während der Entwicklung
-function testing() {
-	schiffe = new Schiffe( 'Tester' );
+//Spiel gegen den Computer führen
+function game_contra_pc(){
 	
-	var twoover = schiffe.shoots;
+	//Auswahldialog schließen
+	close_dialog();
+	 
+	//Objekt der Klasse Schiffe für Spieler erstellen
+	schiffe_one = new Schiffe( 'Spieler' );
+	schiffe_two = new Schiffe( 'Computer' );
+	//	Schiffe zufällig anordnen
+	schiffe_one.place_random();
+	schiffe_two.place_random();
+	 
+	//Feld erweitern
+	//	Schüsse des Users zeigen (der PC führt die Liste)
+	feld.show_field_shoots(  schiffe_two.shoots, 'shoot_at' );
+	//	Schiffe des Users zeichen
+	feld.show_field_ships( schiffe_one.current, 'my_ships' );
+	//	Schüsse möglich machen
+	//		User schießt auf Feld des PC
+	feld.make_shootable( "shoot_at", schiffe_two );
+	 
+	 //Medlungen für User
+	 set_message( 'Die Schiffe wurden gesetzt! Führen Sie den ersten Schuss im Feld rechts aus!!' );
+	 
+	 //User ist dran
+	 aktuser = schiffe_one.username;
+	
+}
+
+//Spiel über das Internet gegen einen anderen spielen
+function game_contra_www(){
+	
+	//Spiel gegen einen anderen Spieler (per PHP)
+	global_game = true;
+	
+	 new_dialog( 'Leider ist diese Funktion noch nicht verfügbar' , 'Fehler' );
+	 
+	 //Ajax, PHP
+	 
+	//	var global_spielid 
+	
+}
+
+//alle Schüsse des PC als Array
+//	jeweils mit Inhalt als Sting "x-y"
+var pc_shoots = new Array();
+
+//akteuller User, der dran ist
+var aktuser;
+
+//Nach einem Schuss den PC schießen lassen und Spielfeld aktualisieren 
+function pc_shoot_and_refresh(){
+	
+	//PC schießt
+	//	ist aber doof (schießt zufällig)
+	
+	//PC ist dran
+	aktuser = schiffe_two.username;
+	
+	//Schussstellen
+	var sp_x, sp_y;
+	
+	//noch nicht beschossene Stelle finden
+	do{
+		//Schusspunkt zufällig wählen
+		sp_x = randomint( 0, feld.max_x );
+		sp_y = randomint( 0, feld.max_y );
+	
+		//Schleife erst verlassen, wenn freie Stelle gefunden
+	} while ( $.inArray( sp_x+'-'+sp_y , pc_shoots ) != -1 );
+	
+	//Schuss durchführen
+	schiffe_one.shoot_ships( sp_x, sp_y );
+	
+	//Schusspunkt merken
+	pc_shoots.push( sp_x+'-'+sp_y );
+	
+	//User ist wieder dran
+	aktuser = schiffe_one.username;
+	
+	//Feld des Users aktualisieren
+	//	Schüsse des Users zeigen (der PC führt die Liste)
+	feld.show_field_shoots(  schiffe_two.shoots, 'shoot_at' );
+	//	Schiffe des Users zeichen
+	feld.show_field_ships( schiffe_one.current, 'my_ships' );
+	
+	//Feld des Gegners zeigen?
+	if( show_enemy_field ){
+		//	Schüsse des PC zeigen (der User führt die Liste)
+		feld.show_field_shoots( schiffe_one.shoots , 'shoots' );
+		//	Schiffe des PC zeigen
+		feld.show_field_ships( schiffe_two.current , 'your_ships' );
+	}
+	
+	return;
+}
+
+//Feld des Gegeners zeigen?
+var show_enemy_field = false;
+//Feld des Gegners soll angezeigt werden
+//	oo => nicht gegeben -> Feld zeigen, gegeben -> Feld ausblenden
+//	Rückgabe: true
+function show_enemy( oo ){
+
+	//Feld zeigen?
+	if( typeof oo === "undefined" ){
+		//Übersicht der Schiffe des Users
+		var html = feld.empty_field( 'your_ships' );
+		//Übesicht der Schüsse
+		html += feld.empty_field( 'shoots' );
+		//	alles ausgeben
+		show_html( html, "div.area_two" );
 		
-	//twoover = [{ "x":2, "y":4, "art":1}, { "x":4, "y":6, "art":0}, { "x":9, "y":9, "art":2}];
+		//auch immer aktualisieren usw.
+		show_enemy_field = true;
+		
+		//Felder füllen
+		//	Schüsse des PC zeigen (der User führt die Liste)
+		feld.show_field_shoots( schiffe_one.shoots , 'shoots' );
+		//	Schiffe des PC zeigen
+		feld.show_field_ships( schiffe_two.current , 'your_ships' );
+	}
+	else{
+		//Feld nicht zeigen
+		
+		//Feld leeren
+		show_html( '', "div.area_two" );
+		
+		//auch nicht mehr aktualisieren usw.
+		show_enemy_field = false;
+	}
 	
-	schiffe.place_random();
-	var oneover = schiffe.current;
-	
-	//oneover['u']['place'] = [{ 'y':2, 'x':2, 'd':'h', 't':[0,0] },{ 'y':8, 'x':8, 'd':'h', 't':[1,1] }];
-	//oneover['k']['place'] = [{ 'y':4, 'x':2, 'd':'v', 't':[0,0,0,0] }, { 'y':0, 'x':9, 'd':'v', 't':[1,1,1,1] }];
-
-	feld.show_field_shoots( twoover, 'shoot_at' );
-	feld.show_field_ships( oneover, 'my_ships' );
-	feld.make_shootable( "shoot_at", schiffe );
-
+	return true;
 }
 
 //Ende Ablauf
