@@ -555,6 +555,9 @@ function Schiffe( username ) {
 				//Variablen für Prüfung ob getroffen
 				var sum, i;
 				
+				//Variablen für Anpassung der 
+				var newarr = new Array(), ii; 
+				
 				//horizontal prüfen
 				if( v["d"] == 'h' ){
 					//Y-Wert muss identisch sein
@@ -571,14 +574,24 @@ function Schiffe( username ) {
 							//Vergleich
 							if( sum == x ){
 								
-								console.log( val );
-								console.log( v["t"][i] );
-								
 								//Treffer
 								retval = 1;
 								
-								//Das Schiff als getroffen markieren
-								v["t"][i] = 1;
+								///Das Schiff als getroffen markieren
+								//	Array mit Treffern neu machen
+								for( ii = 0; ii < size; ii++){
+									//aktuelle Trefferstelle?
+									if( ii == i ){
+										//getroffen
+										newarr.push( 1 );
+									}
+									else{
+										//alte Werte verwenden
+										newarr.push( v["t"][ii] );	
+									}
+								}
+								//	Array mit Treffern für Schiff neu scheiben
+								v["t"] = newarr;
 								
 								//Schiff versenkt?
 								//	keine unversehrten Stellen im Array mehr?
@@ -587,7 +600,7 @@ function Schiffe( username ) {
 								}								
 								
 								//Rückgabe
-								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships );
+								return this_func.setretval_for_shoot_ships( retval, x, y );
 							}
 						}
 					}
@@ -608,14 +621,24 @@ function Schiffe( username ) {
 							//Vergleich
 							if( sum == y ){
 								
-								console.log( typeof i );
-								console.log( typeof v["t"] );
-								
 								//Treffer
 								retval = 1;
 								
 								//Das Schiff als getroffen markieren
-								v["t"][i] = 1;
+								//	Array mit Treffern neu machen
+								for( ii = 0; ii < size; ii++){
+									//aktuelle Trefferstelle?
+									if( ii == i ){
+										//getroffen
+										newarr.push( 1 );
+									}
+									else{
+										//alte Werte verwenden
+										newarr.push( v["t"][ii] );	
+									}
+								}
+								//	Array mit Treffern für Schiff neu scheiben
+								v["t"] = newarr;
 								
 								//Schiff versenkt?
 								//	keine unversehrten Stellen im Array mehr?
@@ -624,20 +647,17 @@ function Schiffe( username ) {
 								}
 
 								//Rückgabe
-								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships );
+								return this_func.setretval_for_shoot_ships( retval, x, y );
 							}
 						}
 					}
 				}
-				
-				//Anzahl der Schiffe pro User zählen
-				number_of_ships++;
 			});
 		});
 
 		if( retval == 0 ){
 			//keine Schiffe getroffen
-			return this.setretval_for_shoot_ships( retval, x, y, number_of_ships );
+			return this.setretval_for_shoot_ships( retval, x, y );
 		}
 	}
 
@@ -646,10 +666,43 @@ function Schiffe( username ) {
 	//		retval => 0[Wasser], 1[Treffer], 2[Versenkt]
 	//		x => X-Werte
 	//		y => Y-Werte
-	//		number_of_ships => Anzahl der Schiffe
-	this.setretval_for_shoot_ships = function( retval, x , y, number_of_ships ){
+	//		Return: 0[Wasser], 1[Treffer], 2[Versenkt]
+	this.setretval_for_shoot_ships = function( retval, x , y ){
 		//this.shoots anpassen
 		this.shoots.push( { "x": x, "y": y, "art": retval } );
+		
+		//nicht alle versenkt
+		//Array mit true/false für jedes Schiff
+		var allvers, versarray = new Array();
+		
+		//alle versenkt??
+		//	alle Schiffsarten durchgehen
+		$.each( this.current, function( key, val ){
+		
+			//Jedes Schiff durchgehen
+			$.each( val["place"], function( k, v ){
+			
+				//Schiff ohne Treffer ??	
+				if( $.inArray( 0, v["t"] ) == -1 ){
+					//dieses Schiff ist versenkt
+					versarray.push( false );
+				}
+				else{
+					//Schiff nicht versenkt
+					versarray.push( true );
+				}
+			});
+		});
+		
+		//alle versenkt?
+		if( $.inArray( true, versarray ) == -1 ){
+			//ja
+			allvers = true;
+		}
+		else{
+			//nein
+			 allvers = false;
+		}
 		
 		//Systemeigenes Eventhandling
 		//	Schuss durchgeführt
@@ -657,7 +710,7 @@ function Schiffe( username ) {
 		//	Schiff versenkt -> evtl. ein User gewonnen
 		if( retval == 2 ){
 			reload_data( 'versenkt' );
-			if( number_of_ships == 0 ){
+			if( allvers  ){
 				reload_data( 'alle_versenkt' );
 			}
 		}
