@@ -561,15 +561,33 @@ function Schiffe( username ) {
 					if( v["y"] == y ){
 						//alle Werte des Schiffes prüfen (x+0 bis x+size)
 						//	Array mit Treffern anpassen, versenkt?
-						
 						for( i = 0; i < size; i++ ){
 							
+							//X-Wert berechnen
 							sum = v["x"] + i;
+							//	für den Vergleich Datentyp anpassen
 							sum = sum.toString();
 							
+							//Vergleich
 							if( sum == x ){
+								
+								console.log( val );
+								console.log( v["t"][i] );
+								
+								//Treffer
 								retval = 1;
-								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships, 1 );
+								
+								//Das Schiff als getroffen markieren
+								v["t"][i] = 1;
+								
+								//Schiff versenkt?
+								//	keine unversehrten Stellen im Array mehr?
+								if( $.inArray( 0, v["t"] ) == -1 ){
+									retval = 2;
+								}								
+								
+								//Rückgabe
+								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships );
 							}
 						}
 					}
@@ -580,15 +598,33 @@ function Schiffe( username ) {
 					if( v["x"] == x ){
 						//alle Werte des Schiffes prüfen (y+0 bis y+size)
 						//	Array mit Treffern anpassen, versenkt?
-						
 						for( i = 0; i < size; i++ ){
 							
+							//Y-Wert berechnen
 							sum = v["y"] + i;
+							//	für den Vergleich Datentyp anpassen
 							sum = sum.toString();
 							
+							//Vergleich
 							if( sum == y ){
+								
+								console.log( typeof i );
+								console.log( typeof v["t"] );
+								
+								//Treffer
 								retval = 1;
-								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships, 2 );
+								
+								//Das Schiff als getroffen markieren
+								v["t"][i] = 1;
+								
+								//Schiff versenkt?
+								//	keine unversehrten Stellen im Array mehr?
+								if( $.inArray( 0, v["t"] ) == -1 ){
+									retval = 2;
+								}
+
+								//Rückgabe
+								return this_func.setretval_for_shoot_ships( retval, x, y, number_of_ships );
 							}
 						}
 					}
@@ -601,17 +637,19 @@ function Schiffe( username ) {
 
 		if( retval == 0 ){
 			//keine Schiffe getroffen
-			this.setretval_for_shoot_ships( 0, x, y, number_of_ships, 3 );
-			return 0;
+			return this.setretval_for_shoot_ships( retval, x, y, number_of_ships );
 		}
 	}
 
-	this.setretval_for_shoot_ships = function( retval, x , y, number_of_ships, pl ){
+	//Rückgabe für this.shoot_ships
+	//	Eventhandling
+	//		retval => 0[Wasser], 1[Treffer], 2[Versenkt]
+	//		x => X-Werte
+	//		y => Y-Werte
+	//		number_of_ships => Anzahl der Schiffe
+	this.setretval_for_shoot_ships = function( retval, x , y, number_of_ships ){
 		//this.shoots anpassen
 		this.shoots.push( { "x": x, "y": y, "art": retval } );
-		
-		console.log( this );
-		console.log( [retval, x , y, number_of_ships, pl]);
 		
 		//Systemeigenes Eventhandling
 		//	Schuss durchgeführt
