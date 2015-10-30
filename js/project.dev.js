@@ -75,6 +75,7 @@ function reload_data( done_event ){
 		
 		set_message( 'Das Spiel ist aus!' );
 		
+		//je nachdem wer gerade geschossen hat, hat er gewonnen 
 		if( aktuser == schiffe_one.username ){
 			 new_dialog( 'Du hast gewonnen!', 'Herzlichen Glückwunsch' );
 		}
@@ -82,12 +83,14 @@ function reload_data( done_event ){
 			 new_dialog( 'Dein Gegner hat gewonnen!', 'Schade' );						
 		}
 		
+		//Spielfelder weg
 		show_html( '<div style="height:334px;"><br /><br /><br /><center><a href=""><button>Neues Spiel</button></center></a></div>', "div.area_one" );
 		show_html( '', "div.area_two" );
 	}
 	else if ( done_event == 'versenkt' ) {
 		//Nach einem Schuss, wenn ein Schiff versenkt
 		
+		//je nachdem wer gerade geschossen hat, hat er ein Schiff versenkt
 		if( aktuser == schiffe_one.username ){
 			set_message( 'Du hast ein Schiff versenkt!' );	
 		}
