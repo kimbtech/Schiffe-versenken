@@ -50,7 +50,7 @@ div.outputs{
 	/* Außenanstand */
 	margin: 10px;
 	/* Mindesthöhe */
-	min-height: 30px;
+	min-height: 57px;
 	color:white;
 }
 
@@ -201,4 +201,28 @@ span.untertitel{
 	display: inline-block;
 	/* fette Schrift */
 	font-weight: bold;
+}
+
+/* Balken mit Anzahlen der Schiffe der User */
+div.ship_stat div{
+	/* Beschriftung relativ zum Balken platzieren */
+	position: relative;
+}
+/* Beschriftungen der Balken */
+div.ship_stat div .label{
+	/* Beschriftung absolut platzieren (relativ zu div.ship_stat div) */
+	position: absolute;
+	/* Beschriftung mittig platzieren */
+	left: calc( 50% - 55px );
+	/* Beschiftung mittig platzieren */
+	top: 6px;
+	/* Schatten des Textes */
+	text-shadow: 1px 1px 0 black;
+	/* Text nach oben legen */
+	z-index:2;
+}
+
+/* Keinen Cursor in der Meldungsbox */
+.typed-cursor{
+	display: none;
 }

@@ -15,11 +15,27 @@ function randomint( b, e ){
 	return Math.floor((Math.random() * ((e + 1) - b)) + b);
 }
 
+//IDs für Meldungen
+//	los geht's mit 1
+var message_id = 1;
+
 //Medlung ausgeben
 //	mess => HTML für die Medlung
 function set_message( mess ){
-	$( "div.outputs" ).html( ' '+mess );
-	$( "div.outputs" ).typewriter({ 'speed': 50 });
+	//div für die Medlung erstellen (mit CSS ID nach message_id)
+	$( "div.outputs" ).prepend( '<div id="m'+message_id+'"></div>' );
+	//schon mehr als 3 Medlungen vorhanden?
+	if( message_id > 3 ){
+		//älteste Medlung ausblenden
+		$( "div.outputs div#m"+ ( message_id - 3 ) ).css( 'display', 'none' );
+	}
+	
+	//Typewriter der Medlung in erstellten Kasten
+	$( "div.outputs div#m"+message_id ).typed({ typeSpeed: 0, strings: [ mess ] });
+
+	//die ID der Meldungen für den nächsten Durchgang erhöhen	
+	message_id++;	
+	
 	return true;
 }
 
@@ -84,7 +100,17 @@ function reload_data( done_event ){
 		}
 		
 		//Spielfelder weg
-		show_html( '<div style="height:334px;"><br /><br /><br /><center><a href=""><button>Neues Spiel</button></center></a></div>', "div.area_one" );
+		//Button für neues Spiel
+		show_html( '<div style="height:334px;"><br /><br /><br /><center><div id="button_new">Neues Spiel</div></center></a></div>', "div.area_one" );
+		//	Button auf Dialog
+		$( "#button_new" ).button(); 
+		//	Button Klicks auswerten
+		$( "#button_new" ).click( function() {
+			//neues Spiel beginnen
+			start_game();
+		});
+	 
+	 	//Felder des Gegners weg
 		show_html( '', "div.area_two" );
 	}
 	else if ( done_event == 'versenkt' ) {
@@ -92,10 +118,10 @@ function reload_data( done_event ){
 		
 		//je nachdem wer gerade geschossen hat, hat er ein Schiff versenkt
 		if( aktuser == schiffe_one.username ){
-			set_message( 'Du hast ein Schiff versenkt!' );	
+			set_message( 'Du hast ein Schiff versenkt! (Gegener hat noch '+schiffe_two.number_of_ships+'/10)' );	
 		}
 		else{
-			set_message( 'Eines deiner Schiff wurde versenkt!' );	
+			set_message( 'Eines deiner Schiff wurde versenkt! (Du hast noch '+schiffe_one.number_of_ships+'/10)' );	
 		}
 		
 	}
@@ -326,6 +352,32 @@ function Feld(){
 		return true;
 	}
 
+	//Anzahlen der noch nicht versenken Schiffe anzeigen
+	//	css_class => CSS Klasse eines div, wo die Statistik angezeigt wird
+	//	one, two => Objekte von Schiffe() des Users [one] und des Gegners [two]
+	this.show_shipnumbers = function( css_class, one, two ){
+		
+		//HTML Gerüst für Balken
+		var html = '<b>Schiffe</b><br />'; 
+		html += '<div id="one"><div class="label"></div></div>';
+		html += '<div id="two"><div class="label"></div></div>';
+		
+		//HTML der Seite hinzufügen
+		show_html( html, 'div.'+css_class );
+		
+		//Balken anzeigen
+		//	Balken setzen
+		$( 'div.'+css_class+' #one' ).progressbar( { value: one.number_of_ships, max:10 } );
+		//	Beschiftung anpassen
+		$( 'div.'+css_class+' #one .label' ).text( 'Spieler: '+one.number_of_ships+'/10' );
+		//	Balken setzen
+		$( 'div.'+css_class+' #two' ).progressbar( { value: two.number_of_ships, max:10 } );
+		//	Beschiftung anpassen
+		$( 'div.'+css_class+' #two .label' ).text( 'Gegner: '+two.number_of_ships+'/10' );
+		
+		return true;
+	}
+
 	return;
 
 }
@@ -393,6 +445,10 @@ function Schiffe( username ) {
 	//aktueller Stand für Spieler
 	//	zu Anfang Schiffe da, aber nirgendwo
 	this.current = ships;
+	
+	//Anzahl der Schiffe des Users
+	//	erstmal zehn
+	this.number_of_ships = 10;
 	
 	//Liste aller Schüsse
 	//	Objekte
@@ -702,6 +758,12 @@ function Schiffe( username ) {
 		//Array mit true/false für jedes Schiff
 		var allvers, versarray = new Array();
 		
+		//mit null Schiffen anfangen zu zählen
+		this.number_of_ships = 0
+		
+		//this in each Funktion
+		var this_func = this;
+		
 		//alle versenkt??
 		//	alle Schiffsarten durchgehen
 		$.each( this.current, function( key, val ){
@@ -717,6 +779,8 @@ function Schiffe( username ) {
 				else{
 					//Schiff nicht versenkt
 					versarray.push( true );
+					//Anzhal der Schiffe mitzählen
+					this_func.number_of_ships++;
 				}
 			});
 		});
@@ -765,6 +829,9 @@ var schiffe_one, schiffe_two, feld;
 function start_game(){
 	//alles für neues Spiel abfragen und los
 	
+	//erstmal gegen den PC
+	global_game = false;
+	
 	//Willkommen
 	set_message( 'Herzlich Willkommen bei "Schiffe-versenken" von KIMB-technologies!' );
 	
@@ -784,11 +851,11 @@ function start_game(){
 	//	Inhalt
 	var cont = ' Willkommen bei "Schiffe-versenken" von KIMB-technologies!<br />';
 	cont += 'Bitte wählen Sie einen Gegner:<br /><br />';
-	 cont += '<div id="radio"> <input type="radio" id="pc" name="pc"><label for="pc" >Computer</label><input type="radio" id="www" name="www" ><label for="www">Anderer Spieler</label></div>';
+	cont += '<div id="radio"> <input type="radio" id="pc" name="pc"><label for="pc" >Computer</label><input type="radio" id="www" name="www" ><label for="www">Anderer Spieler</label></div>';
 	//	Dialog
-	 new_dialog( cont, 'Spielbeginn' );
-	 //	Buttons auf Dialog
-	 $( "#radio" ).buttonset();
+	new_dialog( cont, 'Spielbeginn' );
+	//	Buttons auf Dialog
+	$( "#radio" ).buttonset();
 	 
 	 //Button Klicks auswerten
 	$( "#radio input[type=radio]" ).click( function() {
@@ -824,9 +891,12 @@ function game_contra_pc(){
 	//	Schüsse möglich machen
 	//		User schießt auf Feld des PC
 	feld.make_shootable( "shoot_at", schiffe_two );
+	//	Balken mit Anzahlen der Schiffe
+	feld.show_shipnumbers( 'ship_stat', schiffe_one, schiffe_two );
 	 
 	 //Medlungen für User
-	 set_message( 'Die Schiffe wurden gesetzt! Führen Sie den ersten Schuss im Feld rechts aus!!' );
+	 set_message( 'Die Schiffe wurden gesetzt!' );
+	 set_message( 'Führen Sie den ersten Schuss im Feld rechts aus!!' );
 	 
 	 //User ist dran
 	 aktuser = schiffe_one.username;
@@ -839,7 +909,16 @@ function game_contra_www(){
 	//Spiel gegen einen anderen Spieler (per PHP)
 	global_game = true;
 	
-	 new_dialog( 'Leider ist diese Funktion noch nicht verfügbar' , 'Fehler' );
+	//Fehlerdialog
+	new_dialog( 'Leider ist diese Funktion noch nicht verfügbar!<br /><br /><center><div id="button" >OK</div></center>' , 'Fehler' );
+	
+	//Button auf Dialog
+	$( "#button" ).button(); 
+	 //Button Klicks auswerten
+	$( "#button" ).click( function() {
+		//neues Spiel beginnen
+		start_game();
+	});
 	 
 	 //Ajax, PHP
 	 
@@ -889,6 +968,8 @@ function pc_shoot_and_refresh(){
 	feld.show_field_shoots(  schiffe_two.shoots, 'shoot_at' );
 	//	Schiffe des Users zeichen
 	feld.show_field_ships( schiffe_one.current, 'my_ships' );
+	//	Balken mit Anzahlen der Schiffe
+	feld.show_shipnumbers( 'ship_stat', schiffe_one, schiffe_two );
 	
 	//Feld des Gegners zeigen?
 	if( show_enemy_field ){
