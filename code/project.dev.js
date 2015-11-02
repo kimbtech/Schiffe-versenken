@@ -118,7 +118,7 @@ function reload_data( done_event ){
 		
 		//je nachdem wer gerade geschossen hat, hat er ein Schiff versenkt
 		if( aktuser == schiffe_one.username ){
-			set_message( 'Du hast ein Schiff versenkt! (Gegener hat noch '+schiffe_two.number_of_ships+'/10)' );	
+			set_message( 'Du hast ein Schiff versenkt! (Gegner hat noch '+schiffe_two.number_of_ships+'/10)' );	
 		}
 		else{
 			set_message( 'Eines deiner Schiff wurde versenkt! (Du hast noch '+schiffe_one.number_of_ships+'/10)' );	
@@ -811,6 +811,137 @@ function Schiffe( username ) {
 	return;
 }
 
+//Klasse KI des Gegners Computer
+//	gegner => Objekt der Klasse Schiffe();, auf das geschossen wird
+//	feld => Objekt von Feld(); (für Breich der X- & Y-Werte)
+//	level => (siehe unten)
+function KI( gegner, feld, level ){
+	
+	//Leistung der KI
+	//	1 => leicht => zufall
+	//	2 => mittel => zufall, wenn ein Schiff gefunden versenken
+	//	3 => schwer => zufall, wenn ein Schiff gefunden versenken, ein Kästchen frei halten
+	
+	//Wenn nicht gegeben, 1
+	if( typeof level === "undefined" ){
+		level = 1;
+	}
+	//setzen	
+	this.level = level;
+	
+	//schon beschossenen Stellen in Array
+	//	jeweils mit Inhalt als Sting "x-y"
+	this.done_shoots  = new Array();
+	
+	//Schuss von außen auslösen
+	this.shoot = function(){
+		//Level 3?
+		if( this.level == 3){
+			//Level 3 ausführen
+			this.random_versenken_freilassen();
+		}
+		//Level 2?
+		else if( this.level == 2 ){
+			//Level 2 ausführen
+			this.random_versenken();
+		}
+		else{
+			//Level wohl 1
+			this.random();
+		}
+		
+		return;
+	}
+	
+	//Schuss zufällig ausführen (Level 1)
+	this.random = function(){
+
+		//zufällige Stelle finden
+		var randxy =  this.get_xy();
+
+		//Schuss durchführen
+		this.final_shoot( randxy.x, randxy.y );
+		
+		return;
+	}
+
+	//Schuss zufällig, gefundene Schiffe aber versenken (Level 2)
+	this.random_versenken= function(){
+		
+		/*******************************************************/
+		/*	ToDo						*/
+		/*******************************************************/
+		
+		//zufällige Stelle finden
+		var randxy =  this.get_xy();
+		
+		/*******************************************************/
+		/*	ToDo						*/
+		/*******************************************************/
+		
+		//Schuss durchführen
+		this.final_shoot( sp_x, sp_y );
+		
+		return;
+	}
+	
+	//Schuss zufällig, gefundene Schiffe aber versenken, einzelne Kästchen freilassen (Level 2)
+	this.random_versenken_freilassen = function(){
+		
+		/*******************************************************/
+		/*	ToDo						*/
+		/*******************************************************/
+		
+		//zufällige Stelle finden
+		var randxy =  this.get_xy();
+		
+		/*******************************************************/
+		/*	ToDo						*/
+		/*******************************************************/
+
+		
+		//Schuss durchführen
+		this.final_shoot( sp_x, sp_y );
+		
+		return;
+	}
+	
+	//Zufällig noch nicht beschossene Stelle finden
+	this.get_xy = function (){
+		
+		//Schussstellen
+		var sp_x, sp_y;
+	
+		//noch nicht beschossene Stelle finden
+		do{
+			//Schusspunkt zufällig wählen
+			sp_x = randomint( 0, feld.max_x );
+			sp_y = randomint( 0, feld.max_y );
+	
+			//Schleife erst verlassen, wenn freie Stelle gefunden
+		} while ( $.inArray( sp_x+'-'+sp_y , this.done_shoots ) != -1 );
+		
+		//Schusspunkt merken
+		this.done_shoots.push( sp_x+'-'+sp_y );
+		
+		//als Objekt zurückgeben
+		return { "x": sp_x, "y": sp_y };
+	}
+	
+	//Schuss am Objekt des Gegners ausführen
+	//	sp_x => X-Wert des Schusses
+	//	sp_y => Y-Wert des Schusses
+	this.final_shoot = function( sp_x, sp_y ){
+		//Schuss ausführen
+		gegner.shoot_ships( sp_x, sp_y );
+		
+		return true;
+	}
+	
+	
+	return;
+}
+
 //Ende Klassen
 /******************************************************************************************/
 //Beginn Ablauf
@@ -823,7 +954,10 @@ $(function() {
 });
 
 //Das Objekt für Schiffe und User global machen 
-var schiffe_one, schiffe_two, feld;
+var schiffe_one, schiffe_two, feld, ki;
+
+//Level für KI
+var ki_level;
 
 //Spiel beginnen
 function start_game(){
@@ -873,8 +1007,34 @@ function start_game(){
 //Spiel gegen den Computer führen
 function game_contra_pc(){
 	
-	//Auswahldialog schließen
-	close_dialog();
+	
+	//Stärke des Computers/ KI wählen
+	//	Inhalt
+	var cont = 'Bitte wählen Sie die Stärke des Computers:<br /><br />';
+	cont +=  '<div id="radio"> <input type="radio" id="l1" name="l1" checked="checked"><label for="l1" >Schwach</label><input type="radio" id="l2" name="l2" ><label for="l2">Mittel</label><input type="radio" id="l3" name="l3" ><label for="l3">Stark</label></div>';
+	//	Dialog
+	new_dialog( cont, 'KI Level' );
+	//	Buttons auf Dialog
+	$( "#radio" ).buttonset();
+	 
+	 //Button Klicks auswerten
+	$( "#radio input[type=radio]" ).click( function() {
+		//Level 3
+		if( $( this ).attr( 'name' )  == 'l3' ){
+			ki_level = 3;
+		}
+		//Level 2
+		else if( $( this ).attr( 'name' )  == 'l2' ){
+			ki_level = 2;
+		}
+		//Level 1
+		else{
+			ki_level = 1;
+		}
+		
+		//Auswahldialog schließen
+		close_dialog();
+	  });
 	 
 	//Objekt der Klasse Schiffe für Spieler erstellen
 	schiffe_one = new Schiffe( 'Spieler' );
@@ -882,6 +1042,9 @@ function game_contra_pc(){
 	//	Schiffe zufällig anordnen
 	schiffe_one.place_random();
 	schiffe_two.place_random();
+	
+	//KI Objekt
+	ki = new KI( schiffe_one, feld, ki_level );
 	 
 	//Feld erweitern
 	//	Schüsse des Users zeigen (der PC führt die Liste)
@@ -926,11 +1089,7 @@ function game_contra_www(){
 	
 }
 
-//alle Schüsse des PC als Array
-//	jeweils mit Inhalt als Sting "x-y"
-var pc_shoots = new Array();
-
-//akteuller User, der dran ist
+//aktueller User, der dran ist
 var aktuser;
 
 //Nach einem Schuss den PC schießen lassen und Spielfeld aktualisieren 
@@ -942,23 +1101,8 @@ function pc_shoot_and_refresh(){
 	//PC ist dran
 	aktuser = schiffe_two.username;
 	
-	//Schussstellen
-	var sp_x, sp_y;
-	
-	//noch nicht beschossene Stelle finden
-	do{
-		//Schusspunkt zufällig wählen
-		sp_x = randomint( 0, feld.max_x );
-		sp_y = randomint( 0, feld.max_y );
-	
-		//Schleife erst verlassen, wenn freie Stelle gefunden
-	} while ( $.inArray( sp_x+'-'+sp_y , pc_shoots ) != -1 );
-	
-	//Schuss durchführen
-	schiffe_one.shoot_ships( sp_x, sp_y );
-	
-	//Schusspunkt merken
-	pc_shoots.push( sp_x+'-'+sp_y );
+	//KI schießt für PC
+	ki.shoot();
 	
 	//User ist wieder dran
 	aktuser = schiffe_one.username;
