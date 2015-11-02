@@ -1,8 +1,10 @@
 # Schiffe-versenken
 Ein "Schiffe-versenken" Spiel von [***REMOVED***](https://www.***REMOVED***) - Spielen Sie gegen den Computer (JavaScript basiert) oder gegen andere User über das Internet (Verbindung über PHP-Server).
-
+  
+[Online spielen](https://schiffe-versenken.***REMOVED***/)  
+  
 ##Entwicklung
-Das Spiel ist aktuell noch mitten im ersten Entwicklungsprozess und noch nicht nutzbar!
+Siehe [Issues](https://github.com/kimbtech/Schiffe-versenken/issues)
 
 ##Lizenz
 GPLv3
