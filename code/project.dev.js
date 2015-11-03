@@ -573,6 +573,52 @@ function Schiffe( username ) {
 				new_obj['x'] = end_x;
 				new_obj['y'] = end_y;
 				
+				//einen Rand von einem Käschen um die Schiffe frei lassen
+				//	jeweils oben/ unten am Schiff einen besetzten Platz abspeichern
+				//		bei -1 anfangen und einen  weiter gehen (damit auch Kästchen schräg bei Schiff beachtet werden)
+				for( var ii = -1; ii < ( size + 1 ) ; ii++){										
+					if( new_obj['d'] == 'h' ){
+						//horizontal, X-Werte erhöhen
+						
+						//Spielfeld nicht verlassen
+						if( max_y - end_y >= 0 ){
+							//oben einen Rand frei lassen
+							bes_place.push( (end_x +ii ) + '-' + ( end_y + 1 ) );
+						}
+						//Spielfeld nicht verlassen
+						if( end_y - 1 >= 0 ){
+							//unten einen Rand frei lassen
+							bes_place.push( (end_x +ii ) + '-' + ( end_y - 1 ) );
+						}
+					}
+					else{		
+						//Spielfeld nicht verlassen
+						if( max_x - end_x >= 0 ){
+							//rechts einen Rand frei lassen
+							bes_place.push( ( end_x + 1 ) + '-' + ( end_y + ii ) );
+						}
+						if( end_x - 1 >= 0 ){
+							//links einen Rand frei lassen
+							bes_place.push( ( end_x -1 ) + '-' + ( end_y + ii ) );
+						}
+					}	
+				}
+				//Kästchen vor und nach dem Schiff anfügen
+				//	vor
+				if( new_obj['d'] == 'h' ){
+					bes_place.push( ( end_x - 1 )+ '-' + end_y  );
+				}
+				else{
+					bes_place.push( end_x + '-' + ( end_y - 1 ) );
+				}
+				//	nach
+				if( new_obj['d'] == 'h' ){
+					bes_place.push( ( end_x + size ) + '-' + end_y );
+				}
+				else{
+					bes_place.push( end_x + '-' + ( end_y + size ) );
+				}
+				
 				//endgültige Werte als besetzt speichern
 				//	Array von oben
 				bes_place = bes_place.concat( allplaces );
@@ -736,12 +782,16 @@ function Schiffe( username ) {
 					}
 				}
 			});
+			
+			return retval;
 		});
 
 		if( retval == 0 ){
 			//keine Schiffe getroffen
 			return this.setretval_for_shoot_ships( retval, x, y );
 		}
+		
+		return retval;
 	}
 
 	//Rückgabe für this.shoot_ships
@@ -805,6 +855,7 @@ function Schiffe( username ) {
 				reload_data( 'alle_versenkt' );
 			}
 		}
+		
 		return retval;
 	}
 
@@ -832,6 +883,9 @@ function KI( gegner, feld, level ){
 	//schon beschossenen Stellen in Array
 	//	jeweils mit Inhalt als Sting "x-y"
 	this.done_shoots  = new Array();
+	
+	//Array mit den nächsten geplnten Schussstellen erstellen
+	this.next = new Array();
 	
 	//Schuss von außen auslösen
 	this.shoot = function(){
@@ -872,15 +926,84 @@ function KI( gegner, feld, level ){
 		/*	ToDo						*/
 		/*******************************************************/
 		
+		//evtl. this.next verarbeiten
+		
+		
 		//zufällige Stelle finden
 		var randxy =  this.get_xy();
-		
-		/*******************************************************/
-		/*	ToDo						*/
-		/*******************************************************/
+		var sp_x = randxy.x, sp_y = randxy.y;
 		
 		//Schuss durchführen
-		this.final_shoot( sp_x, sp_y );
+		var retval = this.final_shoot( sp_x, sp_y );
+		
+		//Treffer?
+		if( retval == 1){
+			//alle vier Punkte um Treffer bestimmen
+			
+			//Reihenfolge der vier Kästchen drumherum zufällig bestimmen
+			var randint = randomint( 0, 3 );
+
+			//für nächste Punkte Array[ Objekte ]
+			var next;
+
+			//nächste Schüsse planen
+			if( randint == 0 ){
+				next = [
+					{ 'x': ( sp_x + 1 ), 'y': sp_y },
+					{ 'x': sp_x, 'y': ( sp_y + 1 ) },
+					{ 'x': (sp_x -1), 'y': sp_y },
+					{ 'x': sp_x , 'y': ( sp_y - 1 ) }
+				]; 
+			}
+			else if( randint == 1 ){
+				next = [
+					{ 'x': ( sp_x - 1 ), 'y': sp_y },
+					{ 'x': sp_x, 'y': ( sp_y - 1 ) },
+					{ 'x': (sp_x +1), 'y': sp_y },
+					{ 'x': sp_x , 'y': ( sp_y + 1 ) }
+				]; 
+			}
+			else if( randint == 2 ){
+				next = [
+					{ 'x': sp_x, 'y': ( sp_y - 1 ) },
+					{ 'x': ( sp_x - 1 ), 'y': sp_y },
+					{ 'x': sp_x , 'y': ( sp_y + 1 ) },
+					{ 'x': (sp_x +1), 'y': sp_y }
+				]; 
+			}
+			else if( randint == 3 ){
+				next = [
+					{ 'x': sp_x, 'y': ( sp_y + 1 ) },
+					{ 'x': ( sp_x + 1 ), 'y': sp_y },
+					{ 'x': sp_x , 'y': ( sp_y - 1 ) },
+					{ 'x': (sp_x -1), 'y': sp_y }
+				]; 
+			}
+			
+			//this in Funktion benutzen
+			var this_func = this;
+			
+			//this.next leeren (wird gleich neu gefüllt)
+			this.next = new Array();
+			
+			//evtl. Treffer am Rand und Schuss soll nicht außerhalb des Spielfelded laden!!
+			$.each( next, function( key, val ) {
+				
+				if(
+					val["x"] > feld.max_x ||
+					val["x"] < 0 ||
+					val["y"] > feld.max_y ||
+					val["y"] < 0 
+				){
+					//dieses Kästchen nicht behalten
+						
+				}
+				else{
+					//das Kästchen speichern
+					this_func.next.push( val );
+				}
+			});			
+		}
 		
 		return;
 	}
@@ -920,10 +1043,7 @@ function KI( gegner, feld, level ){
 	
 			//Schleife erst verlassen, wenn freie Stelle gefunden
 		} while ( $.inArray( sp_x+'-'+sp_y , this.done_shoots ) != -1 );
-		
-		//Schusspunkt merken
-		this.done_shoots.push( sp_x+'-'+sp_y );
-		
+
 		//als Objekt zurückgeben
 		return { "x": sp_x, "y": sp_y };
 	}
@@ -931,11 +1051,17 @@ function KI( gegner, feld, level ){
 	//Schuss am Objekt des Gegners ausführen
 	//	sp_x => X-Wert des Schusses
 	//	sp_y => Y-Wert des Schusses
+	//	Return: 0[Wasser], 1[Treffer], 2[Versenkt]
 	this.final_shoot = function( sp_x, sp_y ){
-		//Schuss ausführen
-		gegner.shoot_ships( sp_x, sp_y );
 		
-		return true;
+		//Schusspunkt merken
+		this.done_shoots.push( sp_x+'-'+sp_y );
+		
+		//Schuss ausführen
+		var retval = gegner.shoot_ships( sp_x, sp_y );
+		
+		//Wert zurückgeben
+		return retval;
 	}
 	
 	
@@ -1006,8 +1132,7 @@ function start_game(){
 
 //Spiel gegen den Computer führen
 function game_contra_pc(){
-	
-	
+
 	//Stärke des Computers/ KI wählen
 	//	Inhalt
 	var cont = 'Bitte wählen Sie die Stärke des Computers:<br /><br />';
@@ -1034,6 +1159,9 @@ function game_contra_pc(){
 		
 		//Auswahldialog schließen
 		close_dialog();
+		
+		//KI Objekt
+		ki = new KI( schiffe_one, feld, ki_level );
 	  });
 	 
 	//Objekt der Klasse Schiffe für Spieler erstellen
@@ -1042,9 +1170,6 @@ function game_contra_pc(){
 	//	Schiffe zufällig anordnen
 	schiffe_one.place_random();
 	schiffe_two.place_random();
-	
-	//KI Objekt
-	ki = new KI( schiffe_one, feld, ki_level );
 	 
 	//Feld erweitern
 	//	Schüsse des Users zeigen (der PC führt die Liste)
