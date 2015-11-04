@@ -872,6 +872,7 @@ function KI( gegner, feld, level ){
 	//	1 => leicht => zufall
 	//	2 => mittel => zufall, wenn ein Schiff gefunden versenken
 	//	3 => schwer => zufall, wenn ein Schiff gefunden versenken, ein Kästchen frei halten
+	//	4 => extrem => KI kann Schiffe des Gegners sehen
 	
 	//Wenn nicht gegeben, 1
 	if( typeof level === "undefined" ){
@@ -885,12 +886,17 @@ function KI( gegner, feld, level ){
 	this.done_shoots  = new Array();
 	
 	//Array mit den nächsten geplnten Schussstellen erstellen
-	this.next = new Array();
+	this.next = 'unset';
 	
 	//Schuss von außen auslösen
 	this.shoot = function(){
+		//Level 4?
+		if( this.level == 4 ){
+			//Level 4 ausführen
+			this.allwissend();
+		}
 		//Level 3?
-		if( this.level == 3){
+		else if( this.level == 3){
 			//Level 3 ausführen
 			this.random_versenken_freilassen();
 		}
@@ -928,81 +934,98 @@ function KI( gegner, feld, level ){
 		
 		//evtl. this.next verarbeiten
 		
+		//this.next ohne Werte?
+		if( this.next == 'unset' ){
 		
-		//zufällige Stelle finden
-		var randxy =  this.get_xy();
-		var sp_x = randxy.x, sp_y = randxy.y;
-		
-		//Schuss durchführen
-		var retval = this.final_shoot( sp_x, sp_y );
-		
-		//Treffer?
-		if( retval == 1){
-			//alle vier Punkte um Treffer bestimmen
+			//zufällige Stelle finden
+			var randxy =  this.get_xy();
+			var sp_x = randxy.x, sp_y = randxy.y;
 			
-			//Reihenfolge der vier Kästchen drumherum zufällig bestimmen
-			var randint = randomint( 0, 3 );
-
-			//für nächste Punkte Array[ Objekte ]
-			var next;
-
-			//nächste Schüsse planen
-			if( randint == 0 ){
-				next = [
-					{ 'x': ( sp_x + 1 ), 'y': sp_y },
-					{ 'x': sp_x, 'y': ( sp_y + 1 ) },
-					{ 'x': (sp_x -1), 'y': sp_y },
-					{ 'x': sp_x , 'y': ( sp_y - 1 ) }
-				]; 
-			}
-			else if( randint == 1 ){
-				next = [
-					{ 'x': ( sp_x - 1 ), 'y': sp_y },
-					{ 'x': sp_x, 'y': ( sp_y - 1 ) },
-					{ 'x': (sp_x +1), 'y': sp_y },
-					{ 'x': sp_x , 'y': ( sp_y + 1 ) }
-				]; 
-			}
-			else if( randint == 2 ){
-				next = [
-					{ 'x': sp_x, 'y': ( sp_y - 1 ) },
-					{ 'x': ( sp_x - 1 ), 'y': sp_y },
-					{ 'x': sp_x , 'y': ( sp_y + 1 ) },
-					{ 'x': (sp_x +1), 'y': sp_y }
-				]; 
-			}
-			else if( randint == 3 ){
-				next = [
-					{ 'x': sp_x, 'y': ( sp_y + 1 ) },
-					{ 'x': ( sp_x + 1 ), 'y': sp_y },
-					{ 'x': sp_x , 'y': ( sp_y - 1 ) },
-					{ 'x': (sp_x -1), 'y': sp_y }
-				]; 
-			}
+			//Schuss durchführen
+			var retval = this.final_shoot( sp_x, sp_y );
 			
-			//this in Funktion benutzen
-			var this_func = this;
-			
-			//this.next leeren (wird gleich neu gefüllt)
-			this.next = new Array();
-			
-			//evtl. Treffer am Rand und Schuss soll nicht außerhalb des Spielfelded laden!!
-			$.each( next, function( key, val ) {
+			//Treffer?
+			if( retval == 1){
+				//alle vier Punkte um Treffer bestimmen
 				
-				if(
-					val["x"] > feld.max_x ||
-					val["x"] < 0 ||
-					val["y"] > feld.max_y ||
-					val["y"] < 0 
-				){
-					//dieses Kästchen nicht behalten
-						
+				//Reihenfolge der vier Kästchen drumherum zufällig bestimmen
+				var randint = randomint( 0, 3 );
+	
+				//für nächste Punkte Array[ Objekte ]
+				var next;
+	
+				//nächste Schüsse planen
+				if( randint == 0 ){
+					next = [
+						{ 'x': ( sp_x + 1 ), 'y': sp_y },
+						{ 'x': sp_x, 'y': ( sp_y + 1 ) },
+						{ 'x': (sp_x -1), 'y': sp_y },
+						{ 'x': sp_x , 'y': ( sp_y - 1 ) }
+					]; 
 				}
-				else{
-					//das Kästchen speichern
-					this_func.next.push( val );
+				else if( randint == 1 ){
+					next = [
+						{ 'x': ( sp_x - 1 ), 'y': sp_y },
+						{ 'x': sp_x, 'y': ( sp_y - 1 ) },
+						{ 'x': (sp_x +1), 'y': sp_y },
+						{ 'x': sp_x , 'y': ( sp_y + 1 ) }
+					]; 
 				}
-			});			
+				else if( randint == 2 ){
+					next = [
+						{ 'x': sp_x, 'y': ( sp_y - 1 ) },
+						{ 'x': ( sp_x - 1 ), 'y': sp_y },
+						{ 'x': sp_x , 'y': ( sp_y + 1 ) },
+						{ 'x': (sp_x +1), 'y': sp_y }
+					]; 
+				}
+				else if( randint == 3 ){
+					next = [
+						{ 'x': sp_x, 'y': ( sp_y + 1 ) },
+						{ 'x': ( sp_x + 1 ), 'y': sp_y },
+						{ 'x': sp_x , 'y': ( sp_y - 1 ) },
+						{ 'x': (sp_x -1), 'y': sp_y }
+					]; 
+				}
+				
+				//this in Funktion benutzen
+				var this_func = this;
+				
+				//this.next leeren (wird gleich neu gefüllt)
+				this.next = new Array();
+				
+				//evtl. Treffer am Rand und Schuss soll nicht außerhalb des Spielfelded laden!!
+				$.each( next, function( key, val ) {
+					
+					if(
+						val["x"] > feld.max_x ||
+						val["x"] < 0 ||
+						val["y"] > feld.max_y ||
+						val["y"] < 0 
+					){
+						//dieses Kästchen nicht behalten
+							
+					}
+					else{
+						//das Kästchen speichern
+						this_func.next.push( val );
+					}
+				});			
+			}
+			
+		}
+		else{
+			//this.next verwenden
+			
+			alert( 'next defined' );
+			
+			/*******************************************************/
+			/*	ToDo						*/
+			/*******************************************************/
+			
+			
+			//this.next auf unset?
+			
 		}
 		
 		return;
@@ -1025,6 +1048,62 @@ function KI( gegner, feld, level ){
 		
 		//Schuss durchführen
 		this.final_shoot( sp_x, sp_y );
+		
+		return;
+	}
+	
+	//Die KI listet alle Stellen mit den Schiffen des Gegners auf und arbeitet diese dann ab (Level 4)
+	this.allwissend = function(){
+		
+		//erste Durchgang (Schiffe des lesen und Stellen merken)
+		if( this.next == 'unset' ){
+			
+			//Variable für neues Next
+			var newnext = new Array();
+			
+			//alle Schiffsklassen durchgehen
+			$.each( gegner.current, function( key, val ){
+				
+				//Kästchen des Schiffes
+				var size = val['size'];
+				
+				//jedes Schiff durchgehen
+				$.each( val["place"], function( k, v ){
+				
+					//alle Stellen errechnen und dem Array anfügen
+					//	OBJ. x und y
+					for( var i = 0; i < size; i++){									
+						if( v['d'] == 'h' ){
+							//horizontal, X-Werte erhöhen
+							newnext.push( { "x": (v["x"] +i ), "y": v["y"] } );
+						}
+						else{
+							//vertikal, Y-Werte erhöhen
+							newnext.push( { "x": v["x"], "y": ( v["y"] + i ) } );
+						}
+					}
+					
+				});		
+			});
+			
+			//als next des Objekts setzen
+			this.next = newnext;
+			
+			//Index der als nächstes zu beschießenden Stelle aus Next
+			this.next_index = 0;
+		}
+		
+		//alle Stellen von this.next beschießen (Plätze aller Schiffe)
+		
+		//Stellen mit aktuellem Index lesen
+		var sp_x = this.next[this.next_index]["x"];
+		var sp_y = this.next[this.next_index]["y"];
+		
+		//Schuss ausführen
+		this.final_shoot( sp_x, sp_y );
+		
+		//Index für Schusspunkt erhöhen
+		this.next_index++;
 		
 		return;
 	}
@@ -1136,16 +1215,27 @@ function game_contra_pc(){
 	//Stärke des Computers/ KI wählen
 	//	Inhalt
 	var cont = 'Bitte wählen Sie die Stärke des Computers:<br /><br />';
-	cont +=  '<div id="radio"> <input type="radio" id="l1" name="l1" checked="checked"><label for="l1" >Schwach</label><input type="radio" id="l2" name="l2" ><label for="l2">Mittel</label><input type="radio" id="l3" name="l3" ><label for="l3">Stark</label></div>';
+	cont +=  '<div id="radio">';
+	cont +=  '<input type="radio" id="l1" name="l1" ><label for="l1"  title="Der Computer schießt einfach zufällig." >Schwach</label>';
+	cont +=  '<input type="radio" id="l2" name="l2" ><label for="l2" title="Der Computer schießt zufällig, versenkt aber gefundene Schiffe." >Mittel</label>';
+	cont +=  '<input type="radio" id="l3" name="l3" ><label for="l3" title="Der Computer schießt so, dass immer einzelne Kästchen frei bleiben (dort kann kein Schiff sein) und versenkt gefundene Schiffe." >Stark</label>';
+	cont +=  '<input type="radio" id="l4" name="l4"><label for="l4" title="Der Computer schummelt und kennt die Schiffe des Gegners.">Extrem</label>';
+	cont +=  '</div>';
 	//	Dialog
 	new_dialog( cont, 'KI Level' );
 	//	Buttons auf Dialog
 	$( "#radio" ).buttonset();
+	//	Titel der Buttons im Dialog beim Überfahren anzeigen
+	$( "#radio" ).tooltip();
 	 
 	 //Button Klicks auswerten
 	$( "#radio input[type=radio]" ).click( function() {
+		//Level 4
+		if( $( this ).attr( 'name' )  == 'l4' ){
+			ki_level = 4;
+		}
 		//Level 3
-		if( $( this ).attr( 'name' )  == 'l3' ){
+		else if( $( this ).attr( 'name' )  == 'l3' ){
 			ki_level = 3;
 		}
 		//Level 2
