@@ -881,6 +881,12 @@ function KI( gegner, feld, level ){
 	//setzen	
 	this.level = level;
 	
+	//Value des letzten Schusses
+	//	bei Level 2 und 3
+	this.lastretval = 0;
+	//	Plätze wo Schiff entdeckt wurde
+	this.shipfound_place;	
+	
 	//schon beschossenen Stellen in Array
 	//	jeweils mit Inhalt als Sting "x-y"
 	this.done_shoots  = new Array();
@@ -928,12 +934,6 @@ function KI( gegner, feld, level ){
 	//Schuss zufällig, gefundene Schiffe aber versenken (Level 2)
 	this.random_versenken= function(){
 		
-		/*******************************************************/
-		/*	ToDo						*/
-		/*******************************************************/
-		
-		//evtl. this.next verarbeiten
-		
 		//this.next ohne Werte?
 		if( this.next == 'unset' ){
 		
@@ -955,8 +955,10 @@ function KI( gegner, feld, level ){
 				var next;
 	
 				//nächste Schüsse planen
+				//	unter Index 0 den aktuellen Schuss ablegen!
 				if( randint == 0 ){
 					next = [
+						{ 'x': sp_x, 'y': sp_y },
 						{ 'x': ( sp_x + 1 ), 'y': sp_y },
 						{ 'x': sp_x, 'y': ( sp_y + 1 ) },
 						{ 'x': (sp_x -1), 'y': sp_y },
@@ -965,6 +967,7 @@ function KI( gegner, feld, level ){
 				}
 				else if( randint == 1 ){
 					next = [
+						{ 'x': sp_x, 'y': sp_y },
 						{ 'x': ( sp_x - 1 ), 'y': sp_y },
 						{ 'x': sp_x, 'y': ( sp_y - 1 ) },
 						{ 'x': (sp_x +1), 'y': sp_y },
@@ -973,6 +976,7 @@ function KI( gegner, feld, level ){
 				}
 				else if( randint == 2 ){
 					next = [
+						{ 'x': sp_x, 'y': sp_y },
 						{ 'x': sp_x, 'y': ( sp_y - 1 ) },
 						{ 'x': ( sp_x - 1 ), 'y': sp_y },
 						{ 'x': sp_x , 'y': ( sp_y + 1 ) },
@@ -981,6 +985,7 @@ function KI( gegner, feld, level ){
 				}
 				else if( randint == 3 ){
 					next = [
+						{ 'x': sp_x, 'y': sp_y },
 						{ 'x': sp_x, 'y': ( sp_y + 1 ) },
 						{ 'x': ( sp_x + 1 ), 'y': sp_y },
 						{ 'x': sp_x , 'y': ( sp_y - 1 ) },
@@ -1010,23 +1015,146 @@ function KI( gegner, feld, level ){
 						//das Kästchen speichern
 						this_func.next.push( val );
 					}
-				});			
+				});
+				
+				//Stelle an der Schiff gefunden speichern
+				this.shipfound_place = { "x": sp_x, "y": sp_y };			
 			}
 			
 		}
 		else{
 			//this.next verwenden
 			
-			alert( 'next defined' );
+			//Schusspunkte
+			 var sp_x = this.next[1]["x"];
+			 var sp_y = this.next[1]["y"]
 			
-			/*******************************************************/
-			/*	ToDo						*/
-			/*******************************************************/
+			//Schuss nach this.next ausführen		
+			retval = this.final_shoot( sp_x , sp_y );
 			
-			
-			//this.next auf unset?
-			
+			//Treffer ins Wasser, aber Schiff gefunden, nur eine Richtung beendet
+			//in andere Richtung gehen
+			if( retval == 0 && this.lastretval == 1 ){
+				
+				//Stellen wo Schiff gefunden
+				var f_x = this.shipfound_place["x"];
+				var f_y = this.shipfound_place["y"];
+				
+				//vom Platz wo Schiff gefunden ausgehen
+				//	vertikal
+				if( f_x == sp_x ){
+					if( ( sp_y - f_y ) < 0 ){
+						this.next = [
+							{ 'x': f_x, 'y': f_y },
+							{ 'x': f_y, 'y': ( f_y + 1 ) }
+						];
+					}
+					else{
+						this.next = [
+							{ 'x': f_x, 'y': f_y },
+							{ 'x': f_y, 'y': ( f_y - 1 ) }
+						];
+					}
+					
+				}
+				//	horizontal
+				else if( f_y == sp_y ){
+					if( ( sp_x - f_x ) < 0 ){
+						this.next = [
+							{ 'x': f_x, 'y': f_y },
+							{ 'x': ( f_x + 1 ), 'y': f_y }
+						];
+					}
+					else{
+						this.next = [
+							{ 'x': f_x, 'y': f_y },
+							{ 'x': ( f_x - 1 ), 'y': f_y }
+						];
+					}
+				}
+				else{
+					//Fehler
+					//keine nächsten Schritte mehr
+					this.next = 'unset';
+					
+					//jetzt ist der letzte Rückgabe egal
+					this.lastretval = 0;
+				}
+			}
+			//Treffer ins Wasser (this.next weiter durchgehen)
+			//	noch ein this.next von oben
+			else if( retval == 0 ){
+				
+				//this.next anpassen
+				//	Wert des aktuellen Schusses entfernen
+				this.next = this.next.splice( 1 );
+				
+				//this.next leer?
+				if ( typeof this.next[1] === "undefined" ){
+					//keine nächsten Schritte mehr
+					this.next = 'unset';
+					
+					//jetzt ist der letzte Rückgabe egal
+					this.lastretval = 0;
+				}
+			}
+			//Treffer
+			//	nächste Stellen neu berechnen
+			else if( retval == 1 ){
+
+				if( this.next[0]["x"] - sp_x == 1 ){
+					this.next = [
+						{ 'x': sp_x, 'y': sp_y },
+						{ 'x': ( sp_x - 1 ), 'y': sp_y }
+					];
+					
+				}
+				else if( this.next[0]["x"] - sp_x == -1 ){
+					this.next = [
+						{ 'x': sp_x, 'y': sp_y },
+						{ 'x': ( sp_x + 1 ), 'y': sp_y }
+					];
+					
+				}
+				else if( this.next[0]["y"] - sp_y == 1 ){
+					this.next = [
+						{ 'x': sp_x, 'y': sp_y },
+						{ 'x': sp_x, 'y': ( sp_y - 1 ) }
+					];
+					
+				}
+				else if( this.next[0]["y"] - sp_y == -1 ){
+					this.next = [
+						{ 'x': sp_x, 'y': sp_y },
+						{ 'x': sp_x, 'y': ( sp_y + 1 ) }
+					];
+					
+				}
+				else{
+					//Fehler
+					//keine nächsten Schritte mehr
+					this.next = 'unset';
+					//jetzt ist der letzte Rückgabe egal
+					this.lastretval = 0;
+				}
+				
+				//den Rückagbewert als this.lastretval ablegen
+				this.lastretval = retval;
+				
+			}
+			//Schiff versenkt
+			else if( retval == 2 ){
+				//also wieder eins suchen
+				
+				//keine nächsten Schritte mehr
+				this.next = 'unset';
+				
+				//jetzt ist der letzte Rückgabe egal
+				this.lastretval = 0;
+			}		
 		}
+		
+		//console.log( this.next );
 		
 		return;
 	}
