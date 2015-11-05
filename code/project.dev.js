@@ -21,17 +21,27 @@ var message_id = 1;
 
 //Medlung ausgeben
 //	mess => HTML für die Medlung
-function set_message( mess ){
-	//div für die Medlung erstellen (mit CSS ID nach message_id)
-	$( "div.outputs" ).prepend( '<div id="m'+message_id+'"></div>' );
+//	typed => leer lassen, damit getippt wird, sonst wird eingeblendet
+function set_message( mess, typed ){
+	//Tippen ?
+	if( typeof typed === "undefined" ){
+		//div für die Medlung erstellen (mit CSS ID nach message_id)
+		$( "div.outputs" ).prepend( '<div id="m'+message_id+'"></div>' );
+	}
+	else{
+		//einblenden
+		$( "div.outputs" ).prepend( '<div id="m'+message_id+'">'+mess+'</div>' );
+	}
 	//schon mehr als 3 Medlungen vorhanden?
 	if( message_id > 3 ){
 		//älteste Medlung ausblenden
 		$( "div.outputs div#m"+ ( message_id - 3 ) ).css( 'display', 'none' );
 	}
 	
-	//Typewriter der Medlung in erstellten Kasten
-	$( "div.outputs div#m"+message_id ).typed({ typeSpeed: 0, strings: [ mess ] });
+	if( typeof typed === "undefined" ){
+		//Typewriter der Medlung in erstellten Kasten
+		$( "div.outputs div#m"+message_id ).typed({ typeSpeed: 0, strings: [ mess ] });
+	}
 
 	//die ID der Meldungen für den nächsten Durchgang erhöhen	
 	message_id++;	
@@ -94,9 +104,13 @@ function reload_data( done_event ){
 		//je nachdem wer gerade geschossen hat, hat er gewonnen 
 		if( aktuser == schiffe_one.username ){
 			 new_dialog( 'Du hast gewonnen!', 'Herzlichen Glückwunsch' );
+			 set_message( 'Du hast gewonnen!' );
+			 set_message( 'Herzlichen Glückwunsch &#128515;', false );
 		}
 		else{
-			 new_dialog( 'Dein Gegner hat gewonnen!', 'Schade' );						
+			 new_dialog( 'Dein Gegner hat gewonnen!', 'Schade' );
+			 set_message( 'Dein Gegner hat gewonnen!' );
+			 set_message( 'Schade &#128542;', false );					
 		}
 		
 		//Spielfelder weg
@@ -109,9 +123,13 @@ function reload_data( done_event ){
 			//neues Spiel beginnen
 			start_game();
 		});
+
+		//Balken weg
+		show_html( '', "div.ship_stat" );
 	 
 	 	//Felder des Gegners weg
 		show_html( '', "div.area_two" );
+
 	}
 	else if ( done_event == 'versenkt' ) {
 		//Nach einem Schuss, wenn ein Schiff versenkt
@@ -885,14 +903,21 @@ function KI( gegner, feld, level ){
 	//	z.B. Schiff in der Mitte getroffen, dann nach links alles versenkt, rechts noch eine Kasten zu finden
 	//	bei Level 2 und 3
 	this.otherdir = false;
-	//	Plätze wo Schiff entdeckt wurde
-	this.shipfound_place;	
+
+	//Plätze wo Schiff entdeckt wurde
+	//	bei Level 2 und 3
+	this.shipfound_place;
+
+	//Werte für Schusspunkte nach Schachbrettmuster
+	//	bei Level 2 und 3
+	this.freilasskaestchen = 'unset';
 	
 	//schon beschossenen Stellen in Array
 	//	jeweils mit Inhalt als Sting "x-y"
 	this.done_shoots  = new Array();
 	
 	//Array mit den nächsten geplnten Schussstellen erstellen
+	//	bei Level 2 und 3
 	this.next = 'unset';
 	
 	//Schuss von außen auslösen
@@ -902,15 +927,10 @@ function KI( gegner, feld, level ){
 			//Level 4 ausführen
 			this.allwissend();
 		}
-		//Level 3?
-		else if( this.level == 3){
-			//Level 3 ausführen
-			this.random_versenken_freilassen();
-		}
-		//Level 2?
-		else if( this.level == 2 ){
+		//Level 2 oder 3?
+		else if( this.level == 2 ||  this.level == 3){
 			//Level 2 ausführen
-			this.random_versenken();
+			this.versenken();
 		}
 		else{
 			//Level wohl 1
@@ -932,14 +952,22 @@ function KI( gegner, feld, level ){
 		return;
 	}
 
-	//Schuss zufällig, gefundene Schiffe aber versenken (Level 2)
-	this.random_versenken= function(){
+	//Schuss zufällig, gefundene Schiffe aber versenken (Level 2 und 3)
+	this.versenken= function(){
 		
 		//this.next ohne Werte?
 		if( this.next == 'unset' ){
 		
-			//zufällige Stelle finden
-			var randxy =  this.get_xy();
+			if( this.level == 2 ){
+				//zufällige Stelle finden (Level 2)
+				var randxy =  this.get_xy();
+			}
+			else{
+				//Stelle mit Vestand wählen (Level 3)
+				var randxy = this.freilassen();
+			}
+			
+			//Rückgabe lesen
 			var sp_x = randxy.x, sp_y = randxy.y;
 			
 			//Schuss durchführen
@@ -1201,24 +1229,67 @@ function KI( gegner, feld, level ){
 	}
 	
 	//Schuss zufällig, gefundene Schiffe aber versenken, einzelne Kästchen freilassen (Level 2)
-	this.random_versenken_freilassen = function(){
+	this.freilassen = function(){
 		
-		/*******************************************************/
-		/*	ToDo						*/
-		/*******************************************************/
-		
-		//zufällige Stelle finden
-		var randxy =  this.get_xy();
-		
-		/*******************************************************/
-		/*	ToDo						*/
-		/*******************************************************/
+		//erster Aufruf und diagonale Durchläufe (immer ein Kästchen frei) noch noch nicht bestimmt?
+		if( this.freilasskaestchen == 'unset' ){
+			//KI soll immer wie im Schachbrettmuster schießen, so 
+			
+			//leeres Array
+			this.freilasskaestchen = new Array;
+			
+			//Indexe in den Schleifen
+			//	algemeiner Index
+			var x, y, i;
+			
+			//zufällig bestimmen wo erste Stelle liegt 
+			i = randomint( 0, 1 );
+			
+			//X-Achse durchgehen
+			for( x = 0; x < ( feld.max_x + 1 ); x++ ){
 
+				//i immer um einen erhöhen, damit Stellen versetzt
+				i++;
+
+				for( y = 0; y < ( feld.max_y + 1); y++ ){
+					//Y-Achse durchgehen
+
+					//immer abwechselnd hinzufügen und nicht hinzufügen
+					//	nur wenn Index gerade
+					if ( i % 2 != 0) {
+						//als Objekt dem Array anfügen
+						this.freilasskaestchen.push( { "x": x, "y": y, "art":0 } );
+					}
+					
+					//allg. Index erhöhen
+					i++;
+				}	
+			}			
+		}
+
+		//Schussstellen
+		var sp_x, sp_y, rand;
 		
-		//Schuss durchführen
-		this.final_shoot( sp_x, sp_y );
-		
-		return;
+		//Anzahl der Stellen im Array bestimmen
+		var count = this.freilasskaestchen.length;
+		//	Index bei Arrays beginnt mit 0
+		count = count - 1;
+	
+		//noch nicht beschossene Stelle finden
+		do{
+			//Schusspunkt aus Liste der Punkte zufällig wählen
+			rand = randomint( 0, count );
+			
+			//X-/ Y-Werte extrahieren
+			sp_x = this.freilasskaestchen[rand]["x"];
+			sp_y = this.freilasskaestchen[rand]["y"];
+	
+			//Schleife erst verlassen, wenn freie Stelle gefunden
+		} while ( $.inArray( sp_x+'-'+sp_y , this.done_shoots ) != -1 );
+
+		//als Objekt zurückgeben
+		return { "x": sp_x, "y": sp_y };
+
 	}
 	
 	//Die KI listet alle Stellen mit den Schiffen des Gegners auf und arbeitet diese dann ab (Level 4)
@@ -1301,13 +1372,13 @@ function KI( gegner, feld, level ){
 	//	sp_y => Y-Wert des Schusses
 	//	Return: 0[Wasser], 1[Treffer], 2[Versenkt]
 	this.final_shoot = function( sp_x, sp_y ){
-		
+			
 		//Schusspunkt merken
 		this.done_shoots.push( sp_x+'-'+sp_y );
-		
+			
 		//Schuss ausführen
 		var retval = gegner.shoot_ships( sp_x, sp_y );
-		
+			
 		//Wert zurückgeben
 		return retval;
 	}
