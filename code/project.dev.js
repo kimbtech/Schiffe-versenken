@@ -881,9 +881,10 @@ function KI( gegner, feld, level ){
 	//setzen	
 	this.level = level;
 	
-	//Value des letzten Schusses
+	//auf der anderen Seite des Schusses gucken sinnvoll?
+	//	z.B. Schiff in der Mitte getroffen, dann nach links alles versenkt, rechts noch eine Kasten zu finden
 	//	bei Level 2 und 3
-	this.lastretval = 0;
+	this.otherdir = false;
 	//	Plätze wo Schiff entdeckt wurde
 	this.shipfound_place;	
 	
@@ -956,12 +957,13 @@ function KI( gegner, feld, level ){
 	
 				//nächste Schüsse planen
 				//	unter Index 0 den aktuellen Schuss ablegen!
+				//	danach in zufälliger Reihenfolge alle vier Richtungen
 				if( randint == 0 ){
 					next = [
 						{ 'x': sp_x, 'y': sp_y },
 						{ 'x': ( sp_x + 1 ), 'y': sp_y },
 						{ 'x': sp_x, 'y': ( sp_y + 1 ) },
-						{ 'x': (sp_x -1), 'y': sp_y },
+						{ 'x': (sp_x - 1), 'y': sp_y },
 						{ 'x': sp_x , 'y': ( sp_y - 1 ) }
 					]; 
 				}
@@ -970,7 +972,7 @@ function KI( gegner, feld, level ){
 						{ 'x': sp_x, 'y': sp_y },
 						{ 'x': ( sp_x - 1 ), 'y': sp_y },
 						{ 'x': sp_x, 'y': ( sp_y - 1 ) },
-						{ 'x': (sp_x +1), 'y': sp_y },
+						{ 'x': (sp_x + 1), 'y': sp_y },
 						{ 'x': sp_x , 'y': ( sp_y + 1 ) }
 					]; 
 				}
@@ -980,7 +982,7 @@ function KI( gegner, feld, level ){
 						{ 'x': sp_x, 'y': ( sp_y - 1 ) },
 						{ 'x': ( sp_x - 1 ), 'y': sp_y },
 						{ 'x': sp_x , 'y': ( sp_y + 1 ) },
-						{ 'x': (sp_x +1), 'y': sp_y }
+						{ 'x': (sp_x + 1), 'y': sp_y }
 					]; 
 				}
 				else if( randint == 3 ){
@@ -989,7 +991,7 @@ function KI( gegner, feld, level ){
 						{ 'x': sp_x, 'y': ( sp_y + 1 ) },
 						{ 'x': ( sp_x + 1 ), 'y': sp_y },
 						{ 'x': sp_x , 'y': ( sp_y - 1 ) },
-						{ 'x': (sp_x -1), 'y': sp_y }
+						{ 'x': (sp_x - 1), 'y': sp_y }
 					]; 
 				}
 				
@@ -1018,7 +1020,7 @@ function KI( gegner, feld, level ){
 				});
 				
 				//Stelle an der Schiff gefunden speichern
-				this.shipfound_place = { "x": sp_x, "y": sp_y };			
+				this.shipfound_place = { "x": sp_x, "y": sp_y };	
 			}
 			
 		}
@@ -1034,7 +1036,7 @@ function KI( gegner, feld, level ){
 			
 			//Treffer ins Wasser, aber Schiff gefunden, nur eine Richtung beendet
 			//in andere Richtung gehen
-			if( retval == 0 && this.lastretval == 1 ){
+			if( retval == 0 && this.otherdir == true ){
 				
 				//Stellen wo Schiff gefunden
 				var f_x = this.shipfound_place["x"];
@@ -1043,22 +1045,26 @@ function KI( gegner, feld, level ){
 				//vom Platz wo Schiff gefunden ausgehen
 				//	vertikal
 				if( f_x == sp_x ){
+					//nach oben oder unten schon am Ende?
+					//	andere Richtung probieren
 					if( ( sp_y - f_y ) < 0 ){
 						this.next = [
 							{ 'x': f_x, 'y': f_y },
-							{ 'x': f_y, 'y': ( f_y + 1 ) }
+							{ 'x': f_x, 'y': ( f_y + 1 ) }
 						];
 					}
 					else{
 						this.next = [
 							{ 'x': f_x, 'y': f_y },
-							{ 'x': f_y, 'y': ( f_y - 1 ) }
+							{ 'x': f_x, 'y': ( f_y - 1 ) }
 						];
 					}
 					
 				}
 				//	horizontal
 				else if( f_y == sp_y ){
+					//nach rechts oder links schon am Ende?
+					//	andere Richtung probieren
 					if( ( sp_x - f_x ) < 0 ){
 						this.next = [
 							{ 'x': f_x, 'y': f_y },
@@ -1077,69 +1083,106 @@ function KI( gegner, feld, level ){
 					//keine nächsten Schritte mehr
 					this.next = 'unset';
 					
-					//jetzt ist der letzte Rückgabe egal
-					this.lastretval = 0;
+					//Richtungswechsel fehlgeschlagen
+					this.otherdir = false;
 				}
 			}
 			//Treffer ins Wasser (this.next weiter durchgehen)
-			//	noch ein this.next von oben
+			//	noch ein this.next von ganz oben
 			else if( retval == 0 ){
 				
 				//this.next anpassen
 				//	Wert des aktuellen Schusses entfernen
-				this.next = this.next.splice( 1 );
 				
+				//Array um this.next neu zu bauen
+				var newnext = new Array();
+
+				//alle Werte durchgehen
+				$.each( this.next, function( key, val ){
+					//Index/ Key 1 ist immer der aktuelle Schuss, diesen weglassen
+					if( key != 1 ){
+						//alle anderen anfügen
+						newnext.push( val );
+					}
+				});
+
+				//neu gebautes Array für this.next nutzen
+				this.next = newnext;
+
 				//this.next leer?
 				if ( typeof this.next[1] === "undefined" ){
 					//keine nächsten Schritte mehr
 					this.next = 'unset';
-					
-					//jetzt ist der letzte Rückgabe egal
-					this.lastretval = 0;
 				}
+				
+				//Schiff konnte noch nicht gefunden werden, restliche Richtungen probieren 
+				this.otherdir = false;
 			}
 			//Treffer
 			//	nächste Stellen neu berechnen
 			else if( retval == 1 ){
 
-				if( this.next[0]["x"] - sp_x == 1 ){
-					this.next = [
-						{ 'x': sp_x, 'y': sp_y },
-						{ 'x': ( sp_x - 1 ), 'y': sp_y }
-					];
-					
+				//jetzt könnte es sinnvoll sein andere Richtungen zu probieren (im nächsten Schritt) 
+				this.otherdir = true;
+
+				//die Richtung herausfinden, in der ein weiterer Treffer gelandet werden konnte
+				//	nächsten Schritt in diese Richtung feststellen
+				//		unter Index 0 wieder die aktuelle Stelle ablegen
+				
+				//vertikal oder horizontal?
+				if( sp_y == this.next[0]["y"] ){
+					if( this.next[0]["x"] - sp_x == 1 ){
+						this.next = [
+							{ 'x': sp_x, 'y': sp_y },
+							{ 'x': ( sp_x - 1 ), 'y': sp_y }
+						];
+					}
+					else if( this.next[0]["x"] - sp_x == -1 ){
+						this.next = [
+							{ 'x': sp_x, 'y': sp_y },
+							{ 'x': ( sp_x + 1 ), 'y': sp_y }
+						];
+					}
+					else{
+						//Fehler
+						//keine nächsten Schritte mehr
+						this.next = 'unset';
+						
+						//Finden neuer Stellen fehlgeschlagen
+						this.otherdir = false;
+					}
 				}
-				else if( this.next[0]["x"] - sp_x == -1 ){
-					this.next = [
-						{ 'x': sp_x, 'y': sp_y },
-						{ 'x': ( sp_x + 1 ), 'y': sp_y }
-					];
-					
-				}
-				else if( this.next[0]["y"] - sp_y == 1 ){
-					this.next = [
-						{ 'x': sp_x, 'y': sp_y },
-						{ 'x': sp_x, 'y': ( sp_y - 1 ) }
-					];
-					
-				}
-				else if( this.next[0]["y"] - sp_y == -1 ){
-					this.next = [
-						{ 'x': sp_x, 'y': sp_y },
-						{ 'x': sp_x, 'y': ( sp_y + 1 ) }
-					];
-					
+				else if(  sp_x == this.next[0]["x"] ){
+					if( this.next[0]["y"] - sp_y == 1 ){
+						this.next = [
+							{ 'x': sp_x, 'y': sp_y },
+							{ 'x': sp_x, 'y': ( sp_y - 1 ) }
+						];
+						
+					}
+					else if( this.next[0]["y"] - sp_y == -1 ){
+						this.next = [
+							{ 'x': sp_x, 'y': sp_y },
+							{ 'x': sp_x, 'y': ( sp_y + 1 ) }
+						];
+					}
+					else{
+						//Fehler
+						//keine nächsten Schritte mehr
+						this.next = 'unset';
+						
+						//Finden neuer Stellen fehlgeschlagen
+						this.otherdir = false;
+					}
 				}
 				else{
 					//Fehler
 					//keine nächsten Schritte mehr
 					this.next = 'unset';
-					//jetzt ist der letzte Rückgabe egal
-					this.lastretval = 0;
+						
+					//Finden neuer Stellen fehlgeschlagen
+					this.otherdir = false;
 				}
-				
-				//den Rückagbewert als this.lastretval ablegen
-				this.lastretval = retval;
 				
 			}
 			//Schiff versenkt
@@ -1149,12 +1192,10 @@ function KI( gegner, feld, level ){
 				//keine nächsten Schritte mehr
 				this.next = 'unset';
 				
-				//jetzt ist der letzte Rückgabe egal
-				this.lastretval = 0;
+				//Schiff versenkt, also muss auch die Richtung nicht gewechselt werden
+				this.otherdir = false;
 			}		
 		}
-		
-		//console.log( this.next );
 		
 		return;
 	}
