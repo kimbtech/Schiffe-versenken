@@ -495,6 +495,9 @@ function Schiffe( username ) {
 		//Besetzte Stellen merken (nicht doppelt zählen)
 		//	jeweils mit Inhalt als Sting "x-y"
 		var bes_place = [];
+		
+		//Platzierungsversuche
+		var place_zu_viele;
 	
 		//alle Schiffsklassen für Feld durchgehen
 		$.each( this.all , function ( key, val ) {
@@ -561,6 +564,9 @@ function Schiffe( username ) {
 					hier_max_y = max_y - size;
 				}
 				
+				//noch keine Platzierungsversuche
+				place_zu_viele = 0;
+				
 				//noch nicht besetzte Stelle finden
 				do{
 					//Stelle (Startpunkt) zufällig wählen
@@ -583,6 +589,20 @@ function Schiffe( username ) {
 							allplaces.push( end_x + '-' + ( end_y + ii ) );
 						}	
 					}
+					
+					//zu viele Platzierungsversuche
+					//	Schiffe liegen wohl so ungünstig, dass diese Schleife nie verlassen wird 
+					if( place_zu_viele > 500 ){
+						//für Fehlermeldung bei erneutem Aufruf der Seite speichern
+						//	zvv => zu viele Versuche
+						sessionStorage.setItem('abbruch', 'zvv');
+						//Seite neu laden
+						location.reload();
+						return;
+					}
+					
+					//nächster Platzierungsversuch
+					place_zu_viele++;
 					
 					//Schleife erst verlassen, wenn freie Stelle gefunden
 				} while ( this_func.all_places_free(allplaces, bes_place) );
@@ -644,6 +664,7 @@ function Schiffe( username ) {
 				//Objekt dieses Schiffes mit den anderen zusammenfügen
 				this_current_new[key]["place"].push( new_obj );
 			}
+
 		});  
 	
 		this.current = this_current_new;
@@ -1644,4 +1665,29 @@ $(function() {
 		$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', 'white' );
 		$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', 'white' );
 	});
+	
+	//Fehlermeldungen ausgeben
+	//	Seite musste neu geladen werden, aber sessionstorage ist gesetzt
+	if( sessionStorage.getItem('abbruch') != null ){
+
+		//Meldung
+		//	HTML Code
+		$( "body" ).append( '<div id="error-message">Die Seite wurde aufgrund eines Fehler neu geladen!<br /><br /><b>Informationen:</b><br /><i>'+sessionStorage.getItem('abbruch')+'</i></div>' );
+		//	Dialog
+		$( "#error-message" ).dialog({
+			modal: true,
+			title: "Fehler",
+			resizable: false,
+			buttons: {
+				Ok: function() {
+					$( this ).dialog( "close" );
+				}
+			}
+ 		});
+		//nur über OK Button Dialog schließen
+		$( ".ui-dialog-titlebar-close" ).css( 'display', 'none' );
+		
+		//Speicher leeren
+		sessionStorage.removeItem( 'abbruch' );
+	}
 });
