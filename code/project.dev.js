@@ -475,6 +475,9 @@ function Schiffe( username ) {
 	//		art => 0[Wasser], 1[Treffer], 2[Versenkt]
 	this.shoots = new Array();
 
+	//Schiffe neu platzieren erlauben/ verbieten
+	this.replace_ship_allow = true;
+
 	//Methoden
 
 	//Schiffe zufällig platzieren
@@ -672,6 +675,62 @@ function Schiffe( username ) {
 		return true;   
 	}
 	
+	//Plätze der Schiffe manuell verändern
+	//	Toolbar hinzufügen und auf clicks schauen
+	//		cssclass => CSS Klasse des Feldes mit den Schiffen
+	//		feld => Objekt des Feldes 
+	this.replace_allow = function( cssclass, feld ){
+		
+		//nur wenn erlaubt
+		if( this.replace_ship_allow ){
+			
+			
+			show_html( 'div.replace_ship', 'ss' );
+			
+			//this.replace_ship( old_x, old_y, x_new, y_new, d, cssclass, feld );
+		}
+		
+		return;
+	}
+	
+	//Platz einen Schiffes ändern
+	//	wird von this.replace_allow(); gestartet
+	//		old_x => alter X-Wert (da wo Schiff gerade ist)
+	//		old_y => alter Y-Wert
+	//		new_x => neuer X-Wert
+	//		new_y => neuer Y-Wert
+	//		d => neue Ausrichtung h/ v
+	//		cssclass => CSS Klasse des Feldes mit den Schiffen
+	//		feld => Objekt des Feldes
+	this.replace_ship = function( old_x, old_y, x_new, y_new, d, cssclass, feld ) {
+		
+		//nur wenn erlaubt
+		if( this.replace_ship_allow ){
+			
+			
+			//this.current anpassen
+			
+			/***********************************************************************/
+			/****************                                   ToDo                             *******************/
+			/***********************************************************************/
+			
+			//neue Schiffsaufstellung zeichenen
+			feld.show_field_ships( this.current, cssclass );
+		}
+		
+		return;
+	}
+	
+	//Änderungen an den Plätzen der Schiffe verbieten
+	this.replace_disallow = function (){
+		
+		//Platzierung verbeiten
+		this.replace_ship_allow = false;
+		
+		//Toolbar ausblenden
+		$( 'div.replace_ship' ).css( 'display', 'none' );
+	}
+	
 	//Prüft ob in zwei Arrays die gleichen Inhalt aufzufinden sind.
 	//	allplaces => Array mit den Inhalten, nach denen gesucht werden soll
 	//	bes_places => Array in dem gesucht wird
@@ -702,6 +761,9 @@ function Schiffe( username ) {
 	//	y => Y-Wert des Schusses
 	//	Return: 0[Wasser], 1[Treffer], 2[Versenkt]
 	this.shoot_ships = function( x, y ){
+		
+		//jetzt dürfen die Plätze nicht mehr verändert werden
+		this.replace_disallow();
 
 		//Int für Rückgabe
 		//	bisher im Wasser gelandet
@@ -1536,6 +1598,11 @@ function game_contra_pc(){
 	 //Medlungen für User
 	 set_message( 'Die Schiffe wurden gesetzt!' );
 	 set_message( 'Führen Sie den ersten Schuss im Feld rechts aus!!' );
+	 set_message( 'Sie können gerne Ihre Schiffe neu anordnen (Toolbar unten)!!' );
+	 
+	//Plätze der Schiffe manuell anpassbar machen
+	//	wird nach erstem Schuss verboten
+	schiffe_one.replace_allow( 'my_ships', feld );
 	 
 	 //User ist dran
 	 aktuser = schiffe_one.username;
