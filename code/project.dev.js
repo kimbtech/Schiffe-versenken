@@ -147,6 +147,32 @@ function reload_data( done_event ){
 	return true;
 }
 
+//Hover für das Schussfeld rechts anzeigen
+//	muss nach Neustart des Games neu ausgeführt werden
+function hover_shoot_at(){
+	//ganze aktuelle Spalte und Reihe markieren
+	var HoverClassPraefix = 'div.shoot_at ';
+	var HoverColor = '#5d7';
+	var HoverColorlight = '#aeb';
+	$( HoverClassPraefix+'.x' ).hover(function(){
+		var classList = $( this ).attr('class').split(/\s+/);
+		
+		if( classList.length > 2 ){
+			$( HoverClassPraefix+'.'+classList[1] ).css( 'background-color', HoverColorlight );
+			$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', HoverColorlight );
+			$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', HoverColor );
+		}
+	}, function(){
+		var classList = $( this ).attr('class').split(/\s+/);
+
+		$( HoverClassPraefix+'.'+classList[1] ).css( 'background-color', 'white' );
+		$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', 'white' );
+		$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', 'white' );
+	});
+	
+	return true;
+}
+
 //Ende allgemeine Funktionen
 /******************************************************************************************/
 //Beginn Klasse
@@ -1509,6 +1535,9 @@ function start_game(){
 	//		alles ausgeben
 	show_html( html, "div.area_one" );
 	
+	//Hover der Reihen und Spalten rechts
+	hover_shoot_at();
+	
 	//Usernamen und Spielart fragen
 	//	Inhalt
 	var cont = ' Willkommen bei "Schiffe-versenken" von KIMB-technologies!<br />';
@@ -1713,25 +1742,6 @@ function show_enemy( oo ){
 
 //wenn Seite geladen
 $(function() {
-	//ganze aktuelle Spalte und Reihe markieren
-	var HoverClassPraefix = 'div.shoot_at ';
-	var HoverColor = '#5d7';
-	var HoverColorlight = '#aeb';
-	$( HoverClassPraefix+'.x' ).hover(function(){
-		var classList = $( this ).attr('class').split(/\s+/);
-		
-		if( classList.length > 2 ){
-			$( HoverClassPraefix+'.'+classList[1] ).css( 'background-color', HoverColorlight );
-			$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', HoverColorlight );
-			$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', HoverColor );
-		}
-	}, function(){
-		var classList = $( this ).attr('class').split(/\s+/);
-
-		$( HoverClassPraefix+'.'+classList[1] ).css( 'background-color', 'white' );
-		$( HoverClassPraefix+'.'+classList[2] ).css( 'background-color', 'white' );
-		$( HoverClassPraefix+'.'+classList[3] ).css( 'background-color', 'white' );
-	});
 	
 	//Fehlermeldungen ausgeben
 	//	Seite musste neu geladen werden, aber sessionstorage ist gesetzt
