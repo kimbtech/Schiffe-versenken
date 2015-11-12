@@ -72,6 +72,9 @@ function close_dialog() {
 	$( "#dialog" ).css( 'display', 'none' );
 }
 
+//Array mit allen Events
+var all_events = new Array();
+
 //Funktionen des Ablaufs hier auslösen
 //	(diese Funktion wird von den Klassen gestartet)
 //		done_event => Stelle des Aufrufs in Klasse
@@ -79,6 +82,9 @@ function reload_data( done_event ){
 
 	//Events in der Konsole für Debugging zeigen
 	console.log( done_event );
+	
+	//Array mit den Events
+	all_events.push( done_event );
 
 	if( done_event == 'shoot' ){
 		//Nach einem Schuss wird das alles ausgeführt:
@@ -242,7 +248,7 @@ function Feld(){
 				//Kästchen erstellen
 				//	(einen nach links class="x", außdem Klasse mit Index von Y, X und zusammen)
 				//	beim Überfahren auch Zahlen zeigen
-				splf += '<div class="x y_'+i+' x_'+ii+' y_'+i+'x_'+ii+'" title="' + ii + ' | ' + this.koordtoletter[i] + ' ' + i + '">&nbsp;</div>';
+				splf += '<div class="x y_'+i+' x_'+ii+' y_'+i+'x_'+ii+'" title="' + ii + ' | ' + this.koordtoletter[i] + ' ' + i + '">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>';
 			}
 			
 			//Reihe beenden
@@ -707,13 +713,160 @@ function Schiffe( username ) {
 	//		feld => Objekt des Feldes 
 	this.replace_allow = function( cssclass, feld ){
 		
+		//this für Funktionen
+		var this_func = this;
+		
 		//nur wenn erlaubt
 		if( this.replace_ship_allow ){
 			
+			//HTML Code für die Leiste
+			var html = '<hr /><div class="lagebar">';
+			html += '<b>Lage anpassen<b/><br />';
+			html += '<span class="ui-icon ui-icon-scissors" style="display:inline-block;" title="Schiffe verschieben aktivieren"></span>';
+			html += '<span class="ui-icon ui-icon-arrowreturnthick-1-w" style="display:inline-block;" title="Ausrichtung des Schiffes ändern"></span>';
+			html += '<span class="ui-icon ui-icon-info" style="display:inline-block;" title="Hier können Sie Ihre Schiffe verschieben. Aktivieren Sie zuerst die Funktion (Schere), anschließend können Sie ein Schiff mit einem Klick auf den Bug wählen. Die Ausrichtung dieses Schiffes können Sie mit dem Pfeil anpassen. Mit einem Klick auf einen freien Platz wird Ihr Schiff dorthin verschoben. Die Funktion wird automatisch mit dem ersten Schuss geblockt!"></span>';
+			html += '</div><hr />';
+			//Leiste anzeigen
+			show_html( html, "div.replace_ship" );
+			//Tooltips
+			$( "div.lagebar" ).tooltip();
+			//als Button
+			$( "span.ui-icon-scissors" ).button();
+			$( "span.ui-icon-arrowreturnthick-1-w" ).button();
 			
-			show_html( 'div.replace_ship', 'ss' );
+			//Daten über gewähltes Schiff
+			//	gew => aktives Schiff vorhanden true/ false
+			//	x => X-Wert des Bugs
+			//	y => Y-Wert des Bugs
+			//	d => Ausrichtung 
+			var akt_ship = { "gew": false, "x": 1, "y": 1, "d": "h" };
 			
-			//this.replace_ship( old_x, old_y, x_new, y_new, d, cssclass, feld );
+			//bei Klick auf die Schere aktivieren
+			$( "div.lagebar span.ui-icon-scissors" ).click( function (){
+				
+				//Schiffe umfärben
+				$( "span.ship_black.ship_bug_v" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
+				$( "span.ship_black.ship_bug_h" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
+				
+				//horizontales Schiff zum Verschieben gewählt
+				$( "span.ship_bug_h" ).click( function (){
+					//CSS Klasse des Kästchens herausbekommen
+					var classes = $( this ).parent().attr('class').split(/\s+/);
+					
+					//Werte für Schiff aus Klasse bestimmen
+					akt_ship.gew = true;
+					akt_ship.y = classes[1].substr(2, 1);
+					akt_ship.x = classes[2].substr(2, 1);
+					akt_ship.d = "h";
+					
+					//Meldung, dass Schiff gewählt
+					set_message( 'Sie haben ein Schiff ausgewählt!' );
+					
+					//Bug blau machen
+					$( this ).css( { "background-color": "blue","border-bottom-color": "blue", "border-right-color": "blue" } );
+
+				});
+				//vertiakles Schiff zum Verschieben gewählt
+				$( "span.ship_bug_v" ).click( function (){
+					//CSS Klasse des Kästchens herausbekommen
+					var classes = $( this ).parent().attr('class').split(/\s+/);
+					
+					//Werte für Schiff aus Klasse bestimmen
+					akt_ship.gew = true;
+					akt_ship.y = classes[1].substr(2, 1);
+					akt_ship.x = classes[2].substr(2, 1);
+					akt_ship.d = "v";
+					
+					//Meldung, dass Schiff gewählt
+					set_message( 'Sie haben ein Schiff ausgewählt!' );
+					
+					//Bug blau machen
+					$( this ).css( { "background-color": "blue","border-bottom-color": "blue", "border-right-color": "blue" } );
+					
+				});
+				
+				//Schiff drehen
+				$( "div.lagebar span.ui-icon-arrowreturnthick-1-w" ).click( function (){
+					
+					//nur wenn Schiff ausgewählt
+					if( akt_ship.gew ){
+						if( akt_ship.d == "h" ){
+							//vertikal machen
+							akt_ship.d = "v";
+							
+							//Meldung, dass Schiff gedreht
+							set_message( 'Das Schiff steht nun vertikal!' );
+						}
+						else{
+							//horizontal machen
+							akt_ship.d = "h";
+							
+							//Meldung, dass Schiff gedreht
+							set_message( 'Das Schiff steht nun horizontal!' );
+						}
+					}
+				});
+				
+				//Hover für Schiff ablegen		
+				$( 'div.my_ships .x' ).hover(function(){
+					//nur wenn Schiff ausgewählt
+					if( akt_ship.gew ){
+						//CSS Klassen lesen
+						var classes = $( this ).attr('class').split(/\s+/);
+						
+						//nur Kästchen in der Mitte wählen
+						if( classes.length > 2 ){
+							//Hintergrund ändern	
+							$( this ).css( 'background-color', 'lightblue' );
+						}
+					}
+				}, function () {
+					//Hintergrund ändern	
+					$( this ).css( 'background-color', 'white' );
+				});
+				
+				
+				//Schiff neu ablegen		
+				$( 'div.my_ships .x' ).click(function(){
+					//nur wenn Schiff ausgewählt
+					if( akt_ship.gew ){
+						//CSS Klassen lesen
+						var classes = $( this ).attr('class').split(/\s+/);
+						
+						//nur Kästchen in der Mitte wählen
+						if( classes.length > 2 ){
+							
+							//Werte für Funktion, die Schiff verschiebt, anpassen
+							y_new = classes[1].substr(2, 1);
+							x_new = classes[2].substr(2, 1);
+							
+							old_x = akt_ship.x;
+							old_y = akt_ship.y;
+							d = akt_ship.d;
+							
+							console.log( JSON.stringify( [old_x, old_y, x_new, y_new, d] ) );
+							
+							//nur wenn andere Stelle
+							if( old_x != x_new || old_y != y_new ){
+								//Schiff verschieben
+								if( this_func.replace_ship( old_x, old_y, x_new, y_new, d, cssclass, feld ) ){
+								
+									//kein Schiff mehr gewählt
+									akt_ship.gew = false;
+									
+									//keinen blauen Bug mehr
+									$( "span.ship_black.ship_bug_v" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
+									$( "span.ship_black.ship_bug_h" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
+								}
+								else{
+									//Meldung, dass Verschieben fehlgeschlagen ist
+									set_message( 'Das Schiff konnte nicht verschoben werden. Wählen Sie ggf. eine andere Stelle!' );
+								}
+							}
+						}
+					}
+				});
+			});
 		}
 		
 		return;
@@ -733,6 +886,7 @@ function Schiffe( username ) {
 		//nur wenn erlaubt
 		if( this.replace_ship_allow ){
 			
+			console.log( JSON.stringify( [old_x, old_y, x_new, y_new, d, cssclass, feld] ) );
 			
 			//this.current anpassen
 			
@@ -741,10 +895,12 @@ function Schiffe( username ) {
 			/***********************************************************************/
 			
 			//neue Schiffsaufstellung zeichenen
-			feld.show_field_ships( this.current, cssclass );
+			//feld.show_field_ships( this.current, cssclass );
+			
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 	
 	//Änderungen an den Plätzen der Schiffe verbieten
@@ -755,6 +911,9 @@ function Schiffe( username ) {
 		
 		//Toolbar ausblenden
 		$( 'div.replace_ship' ).css( 'display', 'none' );
+		
+		//Schiffe zurückfärben
+		$( "span.ship_black" ).css( { "background-color": "black","border-bottom-color": "black", "border-right-color": "black" } );
 	}
 	
 	//Prüft ob in zwei Arrays die gleichen Inhalt aufzufinden sind.
@@ -1684,15 +1843,19 @@ function pc_shoot_and_refresh(){
 	feld.show_field_shoots(  schiffe_two.shoots, 'shoot_at' );
 	//	Schiffe des Users zeichen
 	feld.show_field_ships( schiffe_one.current, 'my_ships' );
-	//	Balken mit Anzahlen der Schiffe
-	feld.show_shipnumbers( 'ship_stat', schiffe_one, schiffe_two );
 	
-	//Feld des Gegners zeigen?
-	if( show_enemy_field ){
-		//	Schüsse des PC zeigen (der User führt die Liste)
-		feld.show_field_shoots( schiffe_one.shoots , 'shoots' );
-		//	Schiffe des PC zeigen
-		feld.show_field_ships( schiffe_two.current , 'your_ships' );
+	//nur wenn Spiel nicht vorbei
+	if( $.inArray( "alle_versenkt", all_events ) == -1 ){
+		//	Balken mit Anzahlen der Schiffe
+		feld.show_shipnumbers( 'ship_stat', schiffe_one, schiffe_two );
+		
+		//Feld des Gegners zeigen?
+		if( show_enemy_field ){
+			//	Schüsse des PC zeigen (der User führt die Liste)
+			feld.show_field_shoots( schiffe_one.shoots , 'shoots' );
+			//	Schiffe des PC zeigen
+			feld.show_field_ships( schiffe_two.current , 'your_ships' );
+		}
 	}
 	
 	return;
