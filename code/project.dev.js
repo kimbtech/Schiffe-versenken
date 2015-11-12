@@ -723,7 +723,7 @@ function Schiffe( username ) {
 			var html = '<hr /><div class="lagebar">';
 			html += '<b>Lage anpassen<b/><br />';
 			html += '<span class="ui-icon ui-icon-scissors" style="display:inline-block;" title="Schiffe verschieben aktivieren"></span>';
-			html += '<span class="ui-icon ui-icon-arrowreturnthick-1-w" style="display:inline-block;" title="Ausrichtung des Schiffes ändern"></span>';
+			html += '<span class="ui-icon ui-icon-arrowreturnthick-1-w" style="display:inline-block;" title="Ausrichtung des Schiffes ändern"></span>&nbsp;&nbsp;&nbsp;&nbsp;';
 			html += '<span class="ui-icon ui-icon-info" style="display:inline-block;" title="Hier können Sie Ihre Schiffe verschieben. Aktivieren Sie zuerst die Funktion (Schere), anschließend können Sie ein Schiff mit einem Klick auf den Bug wählen. Die Ausrichtung dieses Schiffes können Sie mit dem Pfeil anpassen. Mit einem Klick auf einen freien Platz wird Ihr Schiff dorthin verschoben. Die Funktion wird automatisch mit dem ersten Schuss geblockt!"></span>';
 			html += '</div><hr />';
 			//Leiste anzeigen
@@ -844,8 +844,6 @@ function Schiffe( username ) {
 							old_y = akt_ship.y;
 							d = akt_ship.d;
 							
-							console.log( JSON.stringify( [old_x, old_y, x_new, y_new, d] ) );
-							
 							//nur wenn andere Stelle
 							if( old_x != x_new || old_y != y_new ){
 								//Schiff verschieben
@@ -854,9 +852,8 @@ function Schiffe( username ) {
 									//kein Schiff mehr gewählt
 									akt_ship.gew = false;
 									
-									//keinen blauen Bug mehr
-									$( "span.ship_black.ship_bug_v" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
-									$( "span.ship_black.ship_bug_h" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
+									//Schiffe zurückfärben
+									$( "span.ship_black" ).css( { "background-color": "black","border-bottom-color": "black", "border-right-color": "black" } );
 								}
 								else{
 									//Meldung, dass Verschieben fehlgeschlagen ist
@@ -883,19 +880,95 @@ function Schiffe( username ) {
 	//		feld => Objekt des Feldes
 	this.replace_ship = function( old_x, old_y, x_new, y_new, d, cssclass, feld ) {
 		
+		//zu Zahlen machen
+		x_new = parseInt( x_new );
+		y_new = parseInt( y_new );
+		
 		//nur wenn erlaubt
 		if( this.replace_ship_allow ){
 			
-			console.log( JSON.stringify( [old_x, old_y, x_new, y_new, d, cssclass, feld] ) );
+			//besetzte Plätze Array mit "x-y""
+			var bes_place = []
 			
-			//this.current anpassen
+			//Schiff welches verschoben werden soll: IDs 
+			var foundship;
+			
+			//alle Schiffe durchgehen 
+			$.each( this.current, function ( key, val ){
+				//Größe der Schiffsklasse
+				var size = val['size']
+				
+				//jedes Schiff der Klasse durchgehen
+				$.each( val['place'], function( k, v ){
+					
+					//Schiff welches verschoben werden soll gefunden?
+					if( v["x"] == old_x && v["y"] == old_y ){
+						//Informationen über das Schiff für später ablegen
+						foundship = { "klasse":key, "index": k, "size": size };	
+					}
+					
+					//Plätze jedes Schiffes in Array
+					for( var i = 0; i < size ; i++){										
+						if( v['d'] == 'h' ){
+							//horizontal, X-Werte erhöhen
+							bes_place.push( ( v["x"] + i )  + '-' + v["y"] );
+						}
+						else{
+							//vertikal, Y-Werte erhöhen
+							bes_place.push( v["x"]  + '-' + ( v["y"] + i ) );
+						}
+					}
+				});	
+			});
+			
+			//Feldgröße
+			var max_x = feld.max_x;
+			var max_y = feld.max_y;
+			
+			//Werte des verschobenen Schiffes durchgehen
+			//	Überlagerung?
+			for( var i = 0; i < foundship.size; i++ ){
+				if( d == 'h' ){
+					//horizontal, X-Werte erhöhen
+					
+					//Stelle schon vergeben?
+					if( $.inArray( ( x_new + i )  + '-' + y_new, bes_place ) != -1 ){
+						return false;
+					}
+					
+					//Spielfeld darf nicht verlassen werden
+					if( ( x_new + i ) > max_x || y_new > max_y ){
+						return false;
+					}
+
+				}
+				else{
+					//vertikal, Y-Werte erhöhen
+					
+					//Stelle schon vergeben?
+					if( $.inArray( x_new  + '-' + ( y_new + i ), bes_place ) != -1 ){
+						return false;
+					}
+					
+					//Spielfeld darf nicht verlassen werden
+					if( x_new > max_x || ( y_new + i ) > max_y ){
+						return false;
+					}
+				}
+			}
+			
+			console.log( JSON.stringify( [old_x, old_y, x_new, y_new, d, cssclass, feld] ) );
+			console.log( foundship );
 			
 			/***********************************************************************/
 			/****************                                   ToDo                             *******************/
-			/***********************************************************************/
+			/***********************************************************************/			
+			
+			//this.current anpassen
 			
 			//neue Schiffsaufstellung zeichenen
-			//feld.show_field_ships( this.current, cssclass );
+			feld.show_field_ships( this.current, cssclass );
+			
 			
 			return true;
 		}
