@@ -964,10 +964,22 @@ function Schiffe( username ) {
 			console.log( foundship );
 			
 			/***********************************************************************/
-			/****************                                   ToDo                             *******************/
-			/***********************************************************************/			
+			/****************                 ToDo               *******************/
+			/***********************************************************************/
+			
+			var klasse = foundship["klasse"];
+			var index = foundship["index"];
+			var size = foundship["size"];
+			
+			console.log( this.current[klasse]["place"][index] );
+			
+			this.current[klasse]["place"][index]["x"] = x_new;
+			this.current[klasse]["place"][index]["y"] = y_new;
+			this.current[klasse]["place"][index]["d"] = d;
 			
 			//this.current anpassen
+			
+			console.log( JSON.stringify( this.current ) );
 			
 			//neue Schiffsaufstellung zeichenen
 			feld.show_field_ships( this.current, cssclass );
