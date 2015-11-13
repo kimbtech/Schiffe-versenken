@@ -64,6 +64,9 @@ function new_dialog( cont, tit ){
 	$( "#dialog" ).css( 'display', 'block' );
 	$( "#dialog" ).dialog( { width:600 } );
 	$( "#dialog" ).dialog('option', 'title', tit );
+	
+	//nur über OK Button Dialog schließen
+	$( ".ui-dialog-titlebar-close" ).css( 'display', 'none' );
 }
 
 //Dialog schließen
