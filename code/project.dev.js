@@ -1,9 +1,15 @@
+/*
+Ein paar Zeilen sind mit /* auskommentiert, diese sind für eine
+Erweiterung des Spiels gedacht, mit der es möglich wäre über
+einen Server gegen andere Spieler zu spielen!
+
 //Konfigueration um gegen anderen über Server zu spielen (PHP)
 //	PHP/ Server Spiel ?
 var global_game = false;
 //	ID des Spiels für PHP
 //		per Ajax holen
 var global_spielid = 0;
+*/
 
 /******************************************************************************************/
 //Beginn allgemeine Funktionen
@@ -98,18 +104,18 @@ function reload_data( done_event ){
 	if( done_event == 'shoot' ){
 		//Nach einem Schuss wird das alles ausgeführt:
 		
-		if( global_game ){
+/*		if( global_game ){
 			//PHP-Spiel
 		}
 		else{
-			//nur wenn User geschossen hat, PC schießen lassen
+*/			//nur wenn User geschossen hat, PC schießen lassen
 			//	sonst Endlosschleife
 			if( aktuser == schiffe_one.username ){
 				//PC-Spiel
 				pc_shoot_and_refresh();
 			}
-		}
-
+/*		}
+*/
 	}
 	else if( done_event == 'alle_versenkt' ){
 		//Nach einem Schuss, wenn alle Schiffe eines Users versenkt
@@ -1771,10 +1777,10 @@ var ki_level;
 //Spiel beginnen
 function start_game(){
 	//alles für neues Spiel abfragen und los
-	
+/*	
 	//erstmal gegen den PC
 	global_game = false;
-	
+*/	
 	//Willkommen
 	set_message( 'Herzlich Willkommen bei "Schiffe-versenken" von KIMB-technologies!' );
 	
@@ -1792,12 +1798,13 @@ function start_game(){
 	
 	//Hover der Reihen und Spalten rechts
 	hover_shoot_at();
-	
+
+/*	
 	//Usernamen und Spielart fragen
 	//	Inhalt
 	var cont = ' Willkommen bei "Schiffe-versenken" von KIMB-technologies!<br />';
 	cont += 'Bitte wählen Sie einen Gegner:<br /><br />';
-	cont += '<div id="radio"> <input type="radio" id="pc" name="pc"><label for="pc" >Computer</label><input type="radio" id="www" name="www" ><label for="www">Anderer Spieler</label></div>';
+	cont += '<div id="radio"> <input type="radio" id="pc" name="pc"><label for="pc" >Computer</label> <input type="radio" id="www" name="www" ><label for="www">Anderer Spieler</label> </div>';
 	//	Dialog
 	new_dialog( cont, 'Spielbeginn' );
 	//	Buttons auf Dialog
@@ -1813,7 +1820,9 @@ function start_game(){
 		}
 		
 	  });
+*/
 
+	game_contra_pc();
 }
 
 //Spiel gegen den Computer führen
@@ -1894,6 +1903,8 @@ function game_contra_pc(){
 	
 }
 
+/*
+
 //Spiel über das Internet gegen einen anderen spielen
 function game_contra_www(){
 	
@@ -1916,6 +1927,8 @@ function game_contra_www(){
 	//	var global_spielid 
 	
 }
+
+*/
 
 //aktueller User, der dran ist
 var aktuser;

@@ -1,3 +1,5 @@
 Options -Indexes
 
-Header add X-Robots-Tag "none"
+AddCharset UTF-8 .html
+AddCharset UTF-8 .css
+AddCharset UTF-8 .js
