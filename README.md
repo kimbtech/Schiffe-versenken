@@ -18,6 +18,6 @@ GPLv3
 
 ##Links
 [Version auf KIMB-Servern](https://schiffe-versenken.***REMOVED***/)  
-[***REMOVED***](https://www.***REMOVED***)
+[***REMOVED***](https://www.***REMOVED***)  
 [Download](https://download.***REMOVED***/explorer/Schiffe-versenken)
 
