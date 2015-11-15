@@ -58,15 +58,21 @@ function show_html( html, place ){
 //Dialog hinzufügen
 //	cont => Inhalt
 //	tit => Titel
-function new_dialog( cont, tit ){
+//	close => leer lassen, damit kein X in der Ecke angezeigt wird
+function new_dialog( cont, tit, close ){
 	$( "#dialog" ).attr( 'title', tit );
 	$( "#dialog" ).html( cont );
 	$( "#dialog" ).css( 'display', 'block' );
-	$( "#dialog" ).dialog( { width:600 } );
+	$( "#dialog" ).dialog( { width:600, modal:true } );
 	$( "#dialog" ).dialog('option', 'title', tit );
 	
-	//nur über OK Button Dialog schließen
-	$( ".ui-dialog-titlebar-close" ).css( 'display', 'none' );
+	if( typeof close === "undefined" ){
+		//nur über OK Button Dialog schließen
+		$( ".ui-dialog-titlebar-close" ).css( 'display', 'none' );
+	}
+	else{
+		$( ".ui-dialog-titlebar-close" ).css( 'display', 'block' );
+	}
 }
 
 //Dialog schließen
@@ -112,12 +118,12 @@ function reload_data( done_event ){
 		
 		//je nachdem wer gerade geschossen hat, hat er gewonnen 
 		if( aktuser == schiffe_one.username ){
-			 new_dialog( 'Du hast gewonnen!', 'Herzlichen Glückwunsch' );
+			 new_dialog( 'Du hast gewonnen!', 'Herzlichen Glückwunsch', true );
 			 set_message( 'Du hast gewonnen!' );
 			 set_message( 'Herzlichen Glückwunsch &#128515;', false );
 		}
 		else{
-			 new_dialog( 'Dein Gegner hat gewonnen!', 'Schade' );
+			 new_dialog( 'Dein Gegner hat gewonnen!', 'Schade', true );
 			 set_message( 'Dein Gegner hat gewonnen!' );
 			 set_message( 'Schade &#128542;', false );					
 		}
@@ -745,21 +751,21 @@ function Schiffe( username ) {
 			var akt_ship = { "gew": false, "x": 1, "y": 1, "d": "h" };
 			
 			//bei Klick auf die Schere aktivieren
-			$( "div.lagebar span.ui-icon-scissors" ).click( function (){
+			$( "div.lagebar span.ui-icon-scissors" ).unbind('click').click( function (){
 				
 				//Schiffe umfärben
 				$( "span.ship_black.ship_bug_v" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
 				$( "span.ship_black.ship_bug_h" ).css( { "background-color": "green","border-bottom-color": "green", "border-right-color": "green" } );
 				
 				//horizontales Schiff zum Verschieben gewählt
-				$( "span.ship_bug_h" ).click( function (){
+				$( "span.ship_bug_h" ).unbind('click').click( function (){
 					//CSS Klasse des Kästchens herausbekommen
 					var classes = $( this ).parent().attr('class').split(/\s+/);
 					
 					//Werte für Schiff aus Klasse bestimmen
 					akt_ship.gew = true;
-					akt_ship.y = classes[1].substr(2, 1);
-					akt_ship.x = classes[2].substr(2, 1);
+					akt_ship.y = classes[1].substr(2);
+					akt_ship.x = classes[2].substr(2);
 					akt_ship.d = "h";
 					
 					//Meldung, dass Schiff gewählt
@@ -770,14 +776,14 @@ function Schiffe( username ) {
 
 				});
 				//vertiakles Schiff zum Verschieben gewählt
-				$( "span.ship_bug_v" ).click( function (){
+				$( "span.ship_bug_v" ).unbind('click').click( function (){
 					//CSS Klasse des Kästchens herausbekommen
 					var classes = $( this ).parent().attr('class').split(/\s+/);
 					
 					//Werte für Schiff aus Klasse bestimmen
 					akt_ship.gew = true;
-					akt_ship.y = classes[1].substr(2, 1);
-					akt_ship.x = classes[2].substr(2, 1);
+					akt_ship.y = classes[1].substr(2);
+					akt_ship.x = classes[2].substr(2);
 					akt_ship.d = "v";
 					
 					//Meldung, dass Schiff gewählt
@@ -789,7 +795,7 @@ function Schiffe( username ) {
 				});
 				
 				//Schiff drehen
-				$( "div.lagebar span.ui-icon-arrowreturnthick-1-w" ).click( function (){
+				$( "div.lagebar span.ui-icon-arrowreturnthick-1-w" ).unbind('click').click( function (){
 					
 					//nur wenn Schiff ausgewählt
 					if( akt_ship.gew ){
@@ -811,7 +817,7 @@ function Schiffe( username ) {
 				});
 				
 				//Hover für Schiff ablegen		
-				$( 'div.my_ships .x' ).hover(function(){
+				$( 'div.my_ships .x' ).unbind('click').hover(function(){
 					//nur wenn Schiff ausgewählt
 					if( akt_ship.gew ){
 						//CSS Klassen lesen
@@ -830,7 +836,7 @@ function Schiffe( username ) {
 				
 				
 				//Schiff neu ablegen		
-				$( 'div.my_ships .x' ).click(function(){
+				$( 'div.my_ships .x' ).unbind('click').click(function(){
 					//nur wenn Schiff ausgewählt
 					if( akt_ship.gew ){
 						//CSS Klassen lesen
@@ -840,8 +846,8 @@ function Schiffe( username ) {
 						if( classes.length > 2 ){
 							
 							//Werte für Funktion, die Schiff verschiebt, anpassen
-							y_new = classes[1].substr(2, 1);
-							x_new = classes[2].substr(2, 1);
+							y_new = classes[1].substr(2);
+							x_new = classes[2].substr(2);
 							
 							old_x = akt_ship.x;
 							old_y = akt_ship.y;
@@ -886,6 +892,8 @@ function Schiffe( username ) {
 		//zu Zahlen machen
 		x_new = parseInt( x_new );
 		y_new = parseInt( y_new );
+		old_x = parseInt( old_x );
+		old_y = parseInt( old_y );
 		
 		//nur wenn erlaubt
 		if( this.replace_ship_allow ){
@@ -895,7 +903,7 @@ function Schiffe( username ) {
 			
 			//Schiff welches verschoben werden soll: IDs 
 			var foundship;
-			
+					
 			//alle Schiffe durchgehen 
 			$.each( this.current, function ( key, val ){
 				//Größe der Schiffsklasse
@@ -960,30 +968,19 @@ function Schiffe( username ) {
 				}
 			}
 			
-			console.log( JSON.stringify( [old_x, old_y, x_new, y_new, d, cssclass, feld] ) );
-			console.log( foundship );
-			
-			/***********************************************************************/
-			/****************                 ToDo               *******************/
-			/***********************************************************************/
-			
+			//Werte des anzupassenden Schiffes gut ablegen
 			var klasse = foundship["klasse"];
 			var index = foundship["index"];
-			var size = foundship["size"];
 			
-			console.log( this.current[klasse]["place"][index] );
-			
+			//this.current anpassen			
 			this.current[klasse]["place"][index]["x"] = x_new;
 			this.current[klasse]["place"][index]["y"] = y_new;
 			this.current[klasse]["place"][index]["d"] = d;
 			
-			//this.current anpassen
-			
-			console.log( JSON.stringify( this.current ) );
-			
+			//leeres Feld, damit alte Stelle des Schiffes verschwindet
+			$( '.my_ships' ).replaceWith( feld.empty_field( 'my_ships' ) ); 
 			//neue Schiffsaufstellung zeichenen
-			feld.show_field_ships( this.current, cssclass );
-			
+			feld.show_field_ships( this.current, cssclass );			
 			
 			return true;
 		}
@@ -1002,6 +999,17 @@ function Schiffe( username ) {
 		
 		//Schiffe zurückfärben
 		$( "span.ship_black" ).css( { "background-color": "black","border-bottom-color": "black", "border-right-color": "black" } );
+	}
+	
+	//Änderungen an den Plätzen der Schiffe verbieten
+	this.replace_reallow = function (){
+		
+		//Platzierung erlauben
+		this.replace_ship_allow = true;
+		
+		//Toolbar einblenden
+		$( 'div.replace_ship' ).css( 'display', 'block' );
+		
 	}
 	
 	//Prüft ob in zwei Arrays die gleichen Inhalt aufzufinden sind.
@@ -1877,6 +1885,7 @@ function game_contra_pc(){
 	 set_message( 'Sie können gerne Ihre Schiffe neu anordnen (Toolbar unten)!!' );
 	 
 	//Plätze der Schiffe manuell anpassbar machen
+	schiffe_one.replace_reallow();
 	//	wird nach erstem Schuss verboten
 	schiffe_one.replace_allow( 'my_ships', feld );
 	 
