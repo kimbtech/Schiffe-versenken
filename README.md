@@ -1,13 +1,11 @@
-#Schiffe-versenken by ***REMOVED***
+#Schiffe-versenken
 
 Ein "Schiffe-versenken" Spiel von ***REMOVED***.  
 Spielen Sie gegen einen Computer mit verschiedenen Schwierigkeitsgraden.  
 Das gesamte Spiel ist mit JavaScript und CSS realisiert, schauen Sie sich gerne
 die kommentierten Dateien /code/design.dev.css und /code/project.dev.js an!
   
-[Online spielen](https://schiffe-versenken.***REMOVED***/)
-
-[Download](https://download.***REMOVED***/explorer/Other/Schiffe-versenken)
+[Download](https://github.com/kimbtech/Schiffe-versenken/releases)
   
 Sie können das Spiel auch herunterladen und auf Ihrem Rechner ausführen.
 Entpacken Sie einfach die ZIP-Datei und öffnen Sie die index.html mit einem Browser.  
@@ -19,9 +17,4 @@ Siehe [Issues](https://github.com/kimbtech/Schiffe-versenken/issues)
 
 ##Lizenz
 GPLv3
-
-##Links
-[Online spielen](https://schiffe-versenken.***REMOVED***/)  
-[***REMOVED***](https://www.***REMOVED***)  
-[***REMOVED*** Download](https://download.***REMOVED***/explorer/Other/Schiffe-versenken)
 
