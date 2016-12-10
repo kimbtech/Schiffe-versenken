@@ -4,6 +4,8 @@ Ein "Schiffe-versenken" Spiel von ***REMOVED***.
 Spielen Sie gegen einen Computer mit verschiedenen Schwierigkeitsgraden.  
 Das gesamte Spiel ist mit JavaScript und CSS realisiert, schauen Sie sich gerne
 die kommentierten Dateien /code/design.dev.css und /code/project.dev.js an!
+
+[Online spielen](https://kimbtech.github.io/Schiffe-versenken/)  
   
 [Download](https://github.com/kimbtech/Schiffe-versenken/releases)
   
